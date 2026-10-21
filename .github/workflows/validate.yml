@@ -1,0 +1,32 @@
+name: Validate project data
+
+on:
+  push:
+    branches:
+      - main
+      - "setup/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate JSON and unit tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Validate block data
+        run: python scripts/validate_project.py
+      - name: Run four unit tests
+        run: python -m unittest discover -s tests -v
