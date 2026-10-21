@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# Local game installs and proprietary game data (never commit these)
+GTA San Andreas/
+gta-sa.exe
+gta_sa.exe
+*.img
+*.dff
+*.txd
+*.ifp
+*.col
+*.ide
+*.ipl
+*.dat
+*.asi
+*.dll
+*.exe
+*.wad
+
+# Generated/exported content should be reviewed before committing
+build/
+dist/
+exports/
