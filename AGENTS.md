@@ -1,9 +1,11 @@
 # Project instructions for AI agents
 
 ## Project scope
-- Build an original, legally distributable map-mod project inspired by Dushanbe, Tajikistan, for the classic PC version of Grand Theft Auto: San Andreas.
-- Do not attempt to launch the game unless the user explicitly confirms it is installed and asks for runtime testing.
-- Treat real-world map references as research inputs; document provenance and avoid copying protected map assets or other people's mod assets without permission.
+- Build an original, legally distributable map project inspired by Dushanbe, Tajikistan, for GTA V on PC.
+- The current exploratory toolchain uses GTA V Map Agent and its bundled CodeWalker viewer. Map Agent places existing GTA V props; it does not create new terrain, custom building models, or complete city geometry.
+- Keep planning data, GTA world coordinates, exported map assets, and in-game test evidence clearly separate.
+- Record whether the target game installation is GTA V Legacy or Enhanced before claiming edition-specific compatibility. Do not assume assets or exports are interchangeable across editions.
+- Do not claim a map is playable until it has been tested in the stated game edition and target platform.
 
 ## Legal and asset boundaries
 - Never commit Rockstar game binaries, archives, textures, audio, models, scripts, executables, or extracted game data.
@@ -16,7 +18,8 @@
 - Use UTF-8 text, LF line endings, descriptive file names, and small reviewable commits.
 - Add tests for data validation and keep validation deterministic and offline.
 - Do not invent surveyed geographic coordinates. Mark illustrative prototype geometry as fictional/local coordinates until verified.
-- Preserve the distinction between a planning prototype and game-ready map geometry.
+- Never treat fictional local coordinates as GTA V world coordinates without a documented coordinate transform or measured placement reference.
+- Preserve the distinction between a planning prototype, prop-placement scene, custom geometry, exported game assets, and a verified playable build.
 
 ## Validation
 - Run `python scripts/validate_project.py`.
