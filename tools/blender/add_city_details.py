@@ -57,8 +57,9 @@ def get_collection(name):
         for child in list(old.children):
             old.children.unlink(child)
             bpy.data.collections.remove(child)
-        for parent in list(old.users_collection):
-            parent.children.unlink(old)
+        for parent in list(bpy.data.collections):
+            if parent.children.get(old.name) is not None:
+                parent.children.unlink(old)
         bpy.data.collections.remove(old)
     collection = bpy.data.collections.new(name)
     root.children.link(collection)
