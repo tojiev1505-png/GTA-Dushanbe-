@@ -18,6 +18,7 @@ from mathutils import Vector
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_SCRIPT = REPO_ROOT / "tools" / "blender" / "create_istiklol_greybox.py"
 DETAIL_SCRIPT = REPO_ROOT / "tools" / "blender" / "add_city_details.py"
+OSM_SCRIPT = REPO_ROOT / "tools" / "blender" / "import_osm_city_slice.py"
 OUTPUT_DIR = Path(os.environ.get("DUSHANBE_BUILD_OUTPUT", REPO_ROOT / "artifacts")).resolve()
 ROOT_NAME = "Dushanbe_Istiklol_Greybox"
 REQUIRED_COLLECTIONS = (
@@ -44,11 +45,12 @@ def add_preview_rig(scene):
     camera = bpy.data.objects.new("Dushanbe_Preview_Camera", camera_data)
     preview.objects.link(camera)
     camera["dushanbe_preview_only"] = True
-    camera.location = (300.0, -360.0, 310.0)
-    target = Vector((0.0, 0.0, 4.0))
+    # The imported OSM district is roughly 2 km wide; use a wide overview camera.
+    camera.location = (1800.0, -2100.0, 1650.0)
+    target = Vector((0.0, 0.0, 0.0))
     camera.rotation_euler = (target - camera.location).to_track_quat("-Z", "Y").to_euler()
     camera_data.lens = 35.0
-    camera_data.clip_end = 1500.0
+    camera_data.clip_end = 6000.0
     scene.camera = camera
 
     light_data = bpy.data.lights.new("Dushanbe_Preview_Sun_Data", type="SUN")
@@ -114,10 +116,24 @@ def validate_and_describe_scene():
         "scene": ROOT_NAME,
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "blender_version": bpy.app.version_string,
-        "status": "schematic_greybox_built_with_detail_pass",
+        "status": "osm_geospatial_city_slice_built",
         "game_ready": False,
         "units": "metres (illustrative local design units only)",
-        "coordinate_status": "not surveyed; not GTA V world coordinates",
+        "coordinate_status": "OSM local metric projection anchored at Istiklol Monument; not GTA V world coordinates",
+        "osm_data": {
+            "imported": bool(bpy.context.scene.get("dushanbe_osm_imported", False)),
+            "source": bpy.context.scene.get("dushanbe_osm_source", "not imported"),
+            "fetched_utc": bpy.context.scene.get("dushanbe_osm_fetched_utc", "unknown"),
+            "building_count": int(bpy.context.scene.get("dushanbe_osm_buildings", 0)),
+            "procedural_facade_window_count": int(bpy.context.scene.get("dushanbe_osm_windows", 0)),
+            "road_way_count": int(bpy.context.scene.get("dushanbe_osm_road_ways", 0)),
+            "road_segment_count": int(bpy.context.scene.get("dushanbe_osm_road_segments", 0)),
+            "green_area_count": int(bpy.context.scene.get("dushanbe_osm_green_areas", 0)),
+            "plaza_polygon_count": int(bpy.context.scene.get("dushanbe_osm_plaza_polygons", 0)),
+            "water_area_count": int(bpy.context.scene.get("dushanbe_osm_water_areas", 0)),
+            "mapped_tree_count": int(bpy.context.scene.get("dushanbe_osm_mapped_trees", 0)),
+            "bbox_south_west_north_east": list(bpy.context.scene.get("dushanbe_osm_bbox", [])),
+        },
         "objects": len(objects),
         "mesh_objects": len(meshes),
         "materials": material_names,
@@ -131,6 +147,8 @@ def validate_and_describe_scene():
         ],
         "limitations": [
             "All dimensions are schematic assumptions, not surveyed Dushanbe measurements.",
+            "OSM building heights, roof shapes and facade windows are approximate when not tagged in the source data.",
+            "This is not photogrammetry and does not reproduce every facade one-to-one.",
             "This build does not perform Sollumz export to YMAP/YDR/YBN.",
             "This build has not been tested in GTA V Legacy or GTA V Enhanced.",
             "Preview camera and light are for inspection only, not map assets.",
@@ -148,9 +166,15 @@ def main():
     if not DETAIL_SCRIPT.is_file():
         raise FileNotFoundError(f"City detail script was not found: {DETAIL_SCRIPT}")
 
-    # Generate the base scene, then add architectural/urban detail in a second pass.
+    # Generate the base scene, add second-pass details, then replace placeholder masses
+    # with georeferenced building footprints and road geometry from the OSM extract.
+    osm_path = Path(os.environ.get("DUSHANBE_OSM_JSON", REPO_ROOT / "artifacts" / "osm" / "istiklol_slice.json")).resolve()
+    if not osm_path.is_file():
+        raise FileNotFoundError(f"OSM extract is missing: {osm_path}. Run tools/osm/fetch_dushanbe_slice.py first.")
+    os.environ["DUSHANBE_OSM_JSON"] = str(osm_path)
     runpy.run_path(str(SOURCE_SCRIPT), run_name="__main__")
     runpy.run_path(str(DETAIL_SCRIPT), run_name="__main__")
+    runpy.run_path(str(OSM_SCRIPT), run_name="__main__")
 
     scene = bpy.context.scene
     scene.unit_settings.system = "METRIC"
