@@ -22,9 +22,9 @@ unmerged changes.
 
 ## What a successful build means
 
-It means Blender opened the project script in background mode, created the expected
-collections and enough mesh geometry, saved the .blend file, rendered a PNG, and
-produced a valid manifest. CI does this automatically; it does not require Blender to
+It means Blender opened the project scripts in background mode, created the expected
+base and detail collections, produced at least 250 mesh objects, saved the `.blend` file,
+rendered a PNG, and produced a valid manifest. CI does this automatically; it does not require Blender to
 be open on your PC for the build itself.
 
 It does **not** mean the model is a finished GTA V map. The output is still a schematic
