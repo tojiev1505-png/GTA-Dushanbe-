@@ -29,10 +29,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Blender and headless rendering libraries
+      - name: Install Blender, headless rendering libraries and Sollumz dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes blender libegl1 libgl1 libgl1-mesa-dri libegl-mesa0 curl unzip
+          sudo apt-get install --yes blender libegl1 libgl1 libgl1-mesa-dri libegl-mesa0 curl unzip python3-numpy
 
       - name: Check Python syntax
         run: |
