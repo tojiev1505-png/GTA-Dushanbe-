@@ -47,6 +47,7 @@ jobs:
         run: |
           mkdir -p artifacts/osm
           python3 tools/osm/fetch_dushanbe_slice.py --output artifacts/osm/istiklol_slice.json
+          cp assets/osm/README.md artifacts/osm/README.md
 
       - name: Build OSM-backed city slice scene, preview and manifest
         env:
@@ -191,8 +192,6 @@ jobs:
             artifacts/Dushanbe_Istiklol_preview.png
             artifacts/greybox_manifest.json
             artifacts/osm/**
-            assets/osm/README.md
-            docs/REAL_WORLD_3D_ASSETS.md
             artifacts/sollumz-smoke/**
             artifacts/city-export/**
           if-no-files-found: warn
@@ -286,6 +285,5 @@ jobs:
             artifacts/Dushanbe_Istiklol_preview.png
             artifacts/city-export/city_slice_export_manifest.json
             artifacts/osm/istiklol_slice.json
-            assets/osm/README.md
           if-no-files-found: warn
           retention-days: 14
