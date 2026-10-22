@@ -32,7 +32,7 @@ The project is now targeting a real, expandable Dushanbe-inspired city slice. Pr
 
 ## First slice proposal
 
-The proposed slice is Istiklol Square and a short adjoining boulevard, with landmark massing, roads, sidewalks, landscaping, and several surrounding building volumes. Start with a greybox and stable measurement convention, then test a small original asset through Sollumz before making detailed buildings.
+The proposed slice is Istiklol Square and a short adjoining boulevard, with landmark massing, roads, sidewalks, landscaping, parked-vehicle placeholders, and several surrounding building volumes. A first editable Blender script is now at `tools/blender/create_istiklol_greybox.py`. It creates schematic geometry only; it has not yet been run in Blender, exported through Sollumz, or tested in game. Review it against sourced reference dimensions before treating any coordinates as meaningful.
 
 Reference-source register and acceptance criteria are in `docs/CITY_SLICE_PLAN.md`.
 
