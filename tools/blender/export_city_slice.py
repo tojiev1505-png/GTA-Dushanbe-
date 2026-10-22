@@ -55,29 +55,49 @@ def require_addon():
 
 
 def dds_rgba_solid(width: int, height: int, rgba: tuple[int, int, int, int]) -> bytes:
-    """Return a basic uncompressed RGBA8 DDS with standard legacy pixel masks."""
-    pitch = width * 4
-    flags = 0x0000100F  # CAPS | HEIGHT | WIDTH | PIXELFORMAT | PITCH
+    """Return a valid opaque DXT1 DDS. Sollumz declares these swatches as D3DFMT_DXT1."""
+    if width <= 0 or height <= 0:
+        raise ValueError("DDS dimensions must be positive")
+
+    # Encode the solid colour as RGB565. Equal DXT1 endpoints with zero selectors
+    # make every texel use colour 0 and remain opaque.
+    red, green, blue, _alpha = rgba
+    red5 = round(max(0, min(255, red)) * 31 / 255)
+    green6 = round(max(0, min(255, green)) * 63 / 255)
+    blue5 = round(max(0, min(255, blue)) * 31 / 255)
+    colour565 = (red5 << 11) | (green6 << 5) | blue5
+    block = struct.pack("<HHI", colour565, colour565, 0)
+
+    blocks_x = (width + 3) // 4
+    blocks_y = (height + 3) // 4
+    linear_size = blocks_x * blocks_y * 8
+
+    # DDS_HEADER.dwFlags = CAPS | HEIGHT | WIDTH | PIXELFORMAT | LINEARSIZE.
     header = struct.pack(
         "<7I",
-        124, flags, height, width, pitch, 0, 1,  # size, flags, height, width, pitch, depth, mipmaps
+        124,           # DDS_HEADER.dwSize
+        0x00081007,    # dwFlags
+        height,
+        width,
+        linear_size,
+        0,              # dwDepth
+        1,              # dwMipMapCount
     )
     header += struct.pack("<11I", *([0] * 11))
     header += struct.pack(
         "<8I",
-        32,       # DDS_PIXELFORMAT size
-        0x41,     # DDPF_RGB | DDPF_ALPHAPIXELS
-        0,        # fourCC
-        32,       # RGB bit count
-        0x000000FF,  # R mask
-        0x0000FF00,  # G mask
-        0x00FF0000,  # B mask
-        0xFF000000,  # A mask
+        32,             # DDS_PIXELFORMAT.dwSize
+        0x4,            # DDPF_FOURCC
+        0x31545844,     # 'DXT1' in little-endian
+        0, 0, 0, 0, 0, # no RGB masks when FourCC is used
     )
-    header += struct.pack("<5I", 0x1000, 0, 0, 0, 0)  # caps + reserved fields
-    payload = bytes(rgba) * (width * height)
-    return b"DDS " + header + payload
+    header += struct.pack("<5I", 0x1000, 0, 0, 0, 0)  # DDSCAPS_TEXTURE
 
+    payload = block * (blocks_x * blocks_y)
+    result = b"DDS " + header + payload
+    if len(result) != 128 + linear_size:
+        raise RuntimeError("Internal error while writing DXT1 DDS")
+    return result
 
 def safe_resource_name(value: str) -> str:
     value = re.sub(r"[^a-zA-Z0-9_]+", "_", value.strip()).strip("_").lower()
