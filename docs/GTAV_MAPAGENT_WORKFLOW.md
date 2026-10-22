@@ -9,12 +9,24 @@ This guide is for a small throwaway prop-placement scene. It does not create a f
 3. Click inside the 3D viewport and test WASD and mouse movement. Use the mouse wheel to adjust movement speed. This step was confirmed by the user on 2026-10-22.
 4. Record the GTA V game folder used by CodeWalker and whether it is Legacy or Enhanced. Do not assume an export is compatible with both editions.
 
-## 2. Resolve the scene-agent connection blocker
+## 2. Test a local model through Ollama
 
-The editor and camera work. However, on 2026-10-22, Claude Code again reported a 10-second timeout while connecting to `api.anthropic.com`. The editor then reports `Not logged in · Please run /login`. The CLI is unable to reach the service to complete login, so repeating `/login` alone will not solve this.
+The editor and camera work, but Claude Code cannot reach `api.anthropic.com` from the user's current region. Do not keep retrying `/login`. A proposed alternative is Ollama's local Anthropic-compatible API. It routes model inference to the user's own computer rather than Anthropic cloud. This approach is documented by Ollama, but has not yet been tested end-to-end in this Map Agent build.
 
-- If the user is physically in an Anthropic-supported region, test another ordinary network such as a phone hotspot and check local firewall or proxy configuration.
-- If the current physical region is not supported, do not bypass regional availability restrictions. Use a model/provider available to the user and port the application integration; that is a code change, not a toggle in the existing app.
+1. Install Ollama for Windows from https://ollama.com/download/windows.
+2. Open PowerShell and run `ollama --version`, then `ollama pull qwen3:4b`. Ollama lists Qwen3 model variants with tool-calling support; the 4B package is approximately 2.5 GB and is a sensible initial test for a PC with a 6 GB GPU, though actual speed and memory use vary.
+3. In the same PowerShell window, configure this local API and model:
+
+   ```powershell
+   $env:ANTHROPIC_BASE_URL = "http://localhost:11434"
+   $env:ANTHROPIC_AUTH_TOKEN = "ollama"
+   $env:ANTHROPIC_API_KEY = ""
+   $env:MAP_EDITOR_MODEL = "qwen3:4b"
+   ```
+
+4. First test the bridge with `claude --model qwen3:4b`. Ask it to reply exactly `OK`. This is intended to confirm the local Messages API is answering without an Anthropic login.
+5. If the CLI test succeeds, exit it, close any existing Map Agent instance, and run `npm start` from the same PowerShell session. The editor inherits these environment variables and uses `MAP_EDITOR_MODEL` for the builder and (unless manually overridden) the critic.
+6. Try one small prop placement. If the editor reports an unsupported endpoint or another SDK error, capture the exact message; the compatibility API may not support every advanced Claude Agent SDK operation. Do not continue to assume the agent works until this succeeds.
 
 Once the agent works, use this first test prompt:
 
