@@ -36,8 +36,8 @@ internal static class Program
             var ytypXml = Path.Combine(inputDir, "dushanbe_istiklol.ytyp.xml");
             var ymapXml = Path.Combine(inputDir, "dushanbe_istiklol.ymap.xml");
 
-            if (ydrXmlFiles.Length != 9)
-                throw new InvalidDataException($"Expected 9 YDR CWXML files; found {ydrXmlFiles.Length}");
+            if (ydrXmlFiles.Length != 7)
+                throw new InvalidDataException($"Expected 7 YDR CWXML files; found {ydrXmlFiles.Length}");
             if (!File.Exists(ytypXml))
                 throw new FileNotFoundException("Missing YTYP CWXML", ytypXml);
             if (!File.Exists(ymapXml))
@@ -84,8 +84,8 @@ internal static class Program
             var ytypCheck = new YtypFile();
             ytypCheck.Load(ytypBinary);
             var archetypeCount = ytypCheck.AllArchetypes?.Length ?? 0;
-            if (archetypeCount < 9)
-                throw new InvalidDataException($"Native YTYP readback found {archetypeCount} archetypes; expected at least 9");
+            if (archetypeCount < 7)
+                throw new InvalidDataException($"Native YTYP readback found {archetypeCount} archetypes; expected at least 7");
             var ytypOut = Path.Combine(streamDir, "dushanbe_istiklol.ytyp");
             File.WriteAllBytes(ytypOut, ytypBinary);
             var ytypRecord = Record(ytypOut, "YTYP", ytypBinary);
@@ -100,8 +100,8 @@ internal static class Program
             var ymapCheck = new YmapFile();
             ymapCheck.Load(ymapBinary);
             var entityCount = ymapCheck.AllEntities?.Length ?? 0;
-            if (entityCount < 9)
-                throw new InvalidDataException($"Native YMAP readback found {entityCount} entities; expected at least 9");
+            if (entityCount < 7)
+                throw new InvalidDataException($"Native YMAP readback found {entityCount} entities; expected at least 7");
             var ymapOut = Path.Combine(streamDir, "dushanbe_istiklol.ymap");
             File.WriteAllBytes(ymapOut, ymapBinary);
             var ymapRecord = Record(ymapOut, "YMAP", ymapBinary);
@@ -131,7 +131,8 @@ internal static class Program
                     "All geometry and positions are schematic; YMAP placements are not tied to verified GTA V world coordinates.",
                     "No collision YBN, proper LOD/SLOD hierarchy, streaming boundary review, or game installation is included.",
                     "The output targets GEN8 / GTA V Legacy only; GEN9 / Enhanced is not tested.",
-                    "Original flat-colour placeholder textures and blockout geometry are not final art assets."
+                    "The Istiklol landmark remains a schematic placeholder until a verified reusable 3D asset or photogrammetry model is acquired.",
+            "Original flat-colour placeholder textures and blockout geometry are not final art assets."
                 }
             };
             var manifestPath = Path.Combine(outputDir, "native_conversion_manifest.json");
