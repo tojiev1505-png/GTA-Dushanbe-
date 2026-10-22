@@ -1,37 +1,52 @@
-# Tooling research notes
+# GTA V tooling research notes
 
 ## Purpose
 
-This document records a cautious workflow for selecting tools for an original GTA: San Andreas map modification. The exact toolchain is **not selected yet**. Do not infer compatibility from the name of a tool alone.
+This document tracks the tools and checks needed to build an original GTA V map project inspired by Dushanbe. A loaded viewer is only the first technical milestone; scene generation, export, game-edition compatibility, and in-game behavior still require separate verification.
 
-## Candidate roles to research
+## Current toolchain
 
-1. **3D authoring:** Blender or another editor capable of producing original models and geometry.
-2. **Game-format inspection/export:** a maintained GTA: San Andreas modding tool that explicitly supports the intended PC game edition and the file formats in use.
-3. **Texture authoring:** an image editor that exports formats supported by the verified pipeline.
+### GTA V Map Agent + CodeWalker
+
+- Upstream: https://github.com/cngil/gtav-mapagent
+- Intended role: inspect the GTA V world, place existing GTA V props, validate placements, and export prop scenes.
+- Local status on 2026-10-22: the Electron editor starts and the embedded CodeWalker world reaches the ready state.
+- AI status: not verified. Claude Code could not reach Anthropic services from the current environment, so agent-driven prop placement is blocked until that connection/authentication issue is resolved or a supported alternative backend is implemented.
+- Important limitation: this tool does not author new terrain, custom building models, interiors, or a full road network. It is suitable for a prop-scene prototype, not by itself for replacing a real city or producing all of Dushanbe from scratch.
+- Outputs described upstream include JSON and YMAP, plus platform-specific exports such as Menyoo and FiveM. Test the selected output in the intended edition/platform before relying on it.
+
+### Additional authoring work that may be needed
+
+1. **Original 3D geometry:** Blender or another 3D editor for project-authored buildings, road pieces, terrain, and unique landmarks.
+2. **GTA V asset pipeline:** select and verify a maintained exporter/importer that supports the target game edition and required formats. Do not assume a tool built for Legacy supports Enhanced, or the reverse.
+3. **Texture authoring:** an image editor whose exported formats are supported by the selected pipeline.
 4. **Data and validation:** Python 3.10+ and the standard library for repeatable checks of project JSON.
 5. **Source control/CI:** Git and GitHub Actions for text assets, scripts, documentation, and license-safe original sources.
 
-## Verification checklist before choosing a game-specific tool
+## Verification checklist
 
-- Locate official documentation or a maintained upstream repository.
-- Verify supported game edition, architecture, input/output formats, and known limitations.
-- Read the tool's license and any bundled dependency licenses.
-- Confirm the tool does not require redistribution of Rockstar binaries or extracted content.
-- Prefer reproducible steps and small tests; scan downloads with the user's normal security tools.
-- Record exact tool version, source URL, retrieval date, and test result after hands-on verification.
+Before a map slice is called complete:
 
-## Suggested first experiment
+- Record the GTA V edition (Legacy or Enhanced), installation used by CodeWalker, and intended export format.
+- Record tool versions, upstream URLs, licenses, and retrieval/test dates.
+- Confirm the 3D camera and scene panel work.
+- Confirm the AI can place a small number of existing props, if using the agent workflow.
+- Export a tiny test scene and inspect the exported files.
+- Test it in the intended game edition/platform; record the result, steps, and any limitations.
+- Keep proprietary game files and extracted content out of this repository.
 
-1. Create a tiny original road segment and one simple box building in a 3D editor.
-2. Confirm scale units and transforms.
-3. Export only after the game-specific format and tool are verified.
-4. Inspect the exported result with the selected tool.
-5. Do not describe the result as game-tested until it has been tested in the intended game environment.
+## Current first experiment
+
+1. Check camera navigation in the loaded 3D view.
+2. Resolve or replace the unavailable Claude agent connection before asking Map Agent to build a scene.
+3. Create a disposable project with a very small prop arrangement near a known camera position.
+4. Export a JSON copy for inspection; only then try the intended game format.
+5. Keep the result separate from the illustrative planning JSON until a documented coordinate mapping exists.
 
 ## Status
 
-- No game-specific exporter has been approved by this document.
-- No game installation is assumed or required for the current data prototype.
-- The current prototype is planning data only, not a game-ready asset.
-- All candidate tool choices remain subject to current upstream documentation and license review.
+- CodeWalker 3D world loading: verified locally on 2026-10-22, based on the user's run log and confirmation.
+- Camera navigation: not yet reported.
+- AI placement: blocked/not tested because the Claude Code connection to Anthropic timed out.
+- Game export and in-game behavior: not tested.
+- The planning prototype remains illustrative local-coordinate data, not a game-ready asset.
