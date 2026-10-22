@@ -6,24 +6,26 @@ This guide is for a small throwaway prop-placement scene. It does not create a f
 
 1. Start the editor from `gtav-mapagent/editor` with `npm start`.
 2. Confirm that the embedded 3D world is visible.
-3. Click inside the 3D viewport, then test WASD and mouse movement. Use the mouse wheel to adjust movement speed.
+3. Click inside the 3D viewport and test WASD and mouse movement. Use the mouse wheel to adjust movement speed. This step has been confirmed by the user on 2026-10-22.
 4. Record the GTA V game folder used by CodeWalker and whether it is Legacy or Enhanced. Do not assume an export is compatible with both editions.
 
-## 2. Wait until the scene agent is available
+## 2. Test whether the scene agent can respond
 
-The current local run confirmed viewer startup, but AI placement has not yet been verified because Claude Code could not reach Anthropic services. Until the chat agent can authenticate and respond, do not treat a typed prompt as a successful scene build.
+The editor and camera are working, but the chat agent has not yet been verified because Claude Code previously could not reach Anthropic services. Try one small request in the editor. If it succeeds, continue below. If it reports a sign-in or connectivity error, stop and send the exact error text; do not keep retrying or reinstalling the working viewer.
 
-Do not share Claude credentials, session tokens, or API keys in this repository.
+Suggested first prompt:
 
-## 3. Make a disposable test scene
+> At the current camera position, build a small Dushanbe-inspired public square using only existing GTA V props: place two benches facing each other, four streetlights around them, and three planters. Keep everything on the ground, avoid blocking roads or buildings, and inspect the placement from multiple angles. Do not create custom models.
 
-After the agent is working:
+This is a small test of placement and validation, not a real reconstruction of Dushanbe architecture.
 
-1. Create a new project in the Projects panel so the experiment is separate from future city work.
-2. Move the camera to a simple, open location in the existing world.
-3. Ask for a compact prop arrangement within roughly 10–15 metres of the camera, using existing GTA V assets only. For example: a small plaza with benches, planters, and streetlights.
-4. Inspect the placement from several angles. Undo the request if the scene is wrong; keep the test small.
-5. Export a JSON copy first and inspect its prop names, positions, and rotations. Then export the format intended for the eventual target platform.
+Do not share Claude credentials, session tokens, or API keys in the repository.
+
+## 3. Inspect and export the test scene
+
+1. Review each placed item from several angles. Undo the request if the arrangement is wrong.
+2. Export a JSON copy first and inspect its prop names, positions, and rotations.
+3. Only then export the format intended for the eventual target platform.
 
 ## 4. Verify export and keep sources separate
 
