@@ -358,7 +358,7 @@ def main():
         (18.4, 24.8, 0.28, 0.32, 3),
         (22.6, 19.8, 0.28, 0.32, 1),
         (27.2, 13.2, 0.22, 0.28, 3),
-        (29.3, 10.0, 0.18, 0.25, 7),
+        (29.3, 10.0, 0.18, 0.25, 3),
     ]:
         add_band(base, z, radius, height, width, segments=56, material_index=mat_index)
 
@@ -381,7 +381,7 @@ def main():
             p2 = radial * 36.95 + tangent * side * 4.1
             add_pillar(goldwork, p2.x, p2.y, 4.5, 15.9, radius=0.12,
                        segments=10, material_index=1)
-        add_medallion(base, angle, 37.28, 23.0, disk_radius=0.78,
+        add_medallion(base, angle, 37.28, 22.0, disk_radius=0.78,
                       segments=24, outer_material=3, inner_material=1)
         # A second medallion below the arch gives each entrance relief rhythm.
         add_medallion(base, angle, 37.36, 19.4, disk_radius=0.42,

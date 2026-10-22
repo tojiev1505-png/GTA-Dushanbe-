@@ -60,6 +60,7 @@ jobs:
         run: |
           test -s artifacts/Dushanbe_Istiklol_Greybox.blend
           test -s artifacts/Dushanbe_Istiklol_preview.png
+          test -s artifacts/Dushanbe_Istiklol_monument_closeup.png
           test -s artifacts/greybox_manifest.json
           python3 - <<'PY'
           import json
@@ -197,6 +198,7 @@ jobs:
           path: |
             artifacts/Dushanbe_Istiklol_Greybox.blend
             artifacts/Dushanbe_Istiklol_preview.png
+            artifacts/Dushanbe_Istiklol_monument_closeup.png
             artifacts/greybox_manifest.json
             artifacts/osm/**
             artifacts/sollumz-smoke/**
@@ -290,6 +292,7 @@ jobs:
           path: |
             artifacts/native-gen8/**
             artifacts/Dushanbe_Istiklol_preview.png
+            artifacts/Dushanbe_Istiklol_monument_closeup.png
             artifacts/city-export/city_slice_export_manifest.json
             artifacts/osm/istiklol_slice.json
           if-no-files-found: warn

@@ -152,6 +152,7 @@ def validate_and_describe_scene():
         "outputs": [
             "Dushanbe_Istiklol_Greybox.blend",
             "Dushanbe_Istiklol_preview.png",
+            "Dushanbe_Istiklol_monument_closeup.png",
             "greybox_manifest.json",
         ],
         "limitations": [
@@ -199,6 +200,7 @@ def main():
 
     blend_path = OUTPUT_DIR / "Dushanbe_Istiklol_Greybox.blend"
     preview_path = OUTPUT_DIR / "Dushanbe_Istiklol_preview.png"
+    monument_preview_path = OUTPUT_DIR / "Dushanbe_Istiklol_monument_closeup.png"
     manifest_path = OUTPUT_DIR / "greybox_manifest.json"
 
     available_engines = {
@@ -224,9 +226,36 @@ def main():
         json.dump(manifest, handle, ensure_ascii=False, indent=2)
         handle.write("\n")
 
+    # Full-district overview uses the wide camera saved into the .blend file.
+    overview_location = scene.camera.location.copy()
+    overview_rotation = scene.camera.rotation_euler.copy()
+    overview_lens = scene.camera.data.lens
+    overview_clip = scene.camera.data.clip_end
     bpy.ops.render.render(write_still=True)
 
-    for path in (blend_path, preview_path, manifest_path):
+    # A separate closeup makes the 121 m landmark legible instead of a tiny pin
+    # in the 2 km district overview. Keep the editable .blend's camera on overview.
+    scene.camera.location = (200.0, -310.0, 170.0)
+    closeup_target = Vector((0.0, 0.0, 58.0))
+    scene.camera.rotation_euler = (closeup_target - scene.camera.location).to_track_quat("-Z", "Y").to_euler()
+    scene.camera.data.lens = 50.0
+    scene.camera.data.clip_end = 1200.0
+    scene.render.resolution_x = 1280
+    scene.render.resolution_y = 960
+    scene.render.resolution_percentage = 75
+    scene.render.filepath = str(monument_preview_path)
+    bpy.ops.render.render(write_still=True)
+
+    scene.camera.location = overview_location
+    scene.camera.rotation_euler = overview_rotation
+    scene.camera.data.lens = overview_lens
+    scene.camera.data.clip_end = overview_clip
+    scene.render.resolution_x = 1280
+    scene.render.resolution_y = 720
+    scene.render.resolution_percentage = 70
+    scene.render.filepath = str(preview_path)
+
+    for path in (blend_path, preview_path, monument_preview_path, manifest_path):
         if not path.is_file() or path.stat().st_size == 0:
             raise RuntimeError(f"Expected build output is missing or empty: {path}")
 
@@ -234,7 +263,8 @@ def main():
     print(f"Blender version: {bpy.app.version_string}")
     print(f"Objects: {manifest['objects']} total; {manifest['mesh_objects']} meshes")
     print(f"Editable scene: {blend_path}")
-    print(f"Preview image: {preview_path}")
+    print(f"District overview: {preview_path}")
+    print(f"Monument closeup: {monument_preview_path}")
     print(f"Manifest: {manifest_path}")
     print("NOT GAME-READY: Sollumz export and in-game validation are separate steps.")
 
