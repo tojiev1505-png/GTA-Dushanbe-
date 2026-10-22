@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <CodeWalkerSourceDir Condition="'$(CodeWalkerSourceDir)' == ''">$(MSBuildThisFileDirectory)..\..\..\CodeWalker</CodeWalkerSourceDir>
+    <CodeWalkerSourceDir Condition="'$(CodeWalkerSourceDir)' == ''">$(MSBuildThisFileDirectory)..\..\CodeWalker</CodeWalkerSourceDir>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(CodeWalkerSourceDir)\CodeWalker.Core\CodeWalker.Core.csproj" />
