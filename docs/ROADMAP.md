@@ -10,12 +10,23 @@ This roadmap separates planning, prop-scene experiments, custom asset creation, 
 - [x] Add CI for validation and tests.
 - [x] Verify that the local GTA V Map Agent editor launches and CodeWalker renders the world.
 - [x] Verify camera navigation in the embedded 3D view.
+- [x] Verify that Ollama `qwen3:4b` can place one existing GTA V streetlight through the editor.
 
-**Remaining:** AI prop placement is blocked with Anthropic cloud. Test a local Ollama model through its Anthropic-compatible API before planning a larger provider rewrite. This path is proposed, not verified. Game export/testing is also pending, and the target GTA V edition (Legacy or Enhanced) must be recorded.
+**Remaining:** complex multi-object placement, critic/review, export and in-game testing are not yet verified. Record the target GTA V edition (Legacy or Enhanced) and target platform before making compatibility claims.
 
-## Phase 1 — Define the first playable slice
+## Phase 1 — First prop-based public square
 
-- Choose a small Dushanbe-inspired area or landmark for the initial prototype.
+- Keep the confirmed streetlight as the first smoke-test prop.
+- Create a small Dushanbe-inspired public square with two benches facing each other, four streetlights total, and three planters.
+- Use only existing props and a dedicated scene folder; do not create custom models in this step.
+- Inspect the arrangement from several angles and resolve validation errors.
+- Export JSON for review before attempting the target game format.
+
+**Acceptance:** the requested prop layout appears in the editor, placement validation is clean or remaining limitations are documented, and a JSON export can be inspected.
+
+## Phase 2 — Define the playable slice
+
+- Choose a small Dushanbe-inspired location or landmark for the first intended release.
 - Decide whether the first test targets single-player (for example, a Menyoo placement export) or a multiplayer server/resource format.
 - Record reference sources and dates; separate verified observations from estimates.
 - Define the relationship between the project's local planning coordinates and the chosen GTA V world location.
@@ -23,24 +34,14 @@ This roadmap separates planning, prop-scene experiments, custom asset creation, 
 
 **Acceptance:** chosen slice and target platform documented; source register and coordinate conventions established.
 
-## Phase 2 — Verify the GTA V toolchain
+## Phase 3 — Verify export and game compatibility
 
 - Confirm which game installation CodeWalker reads and whether it is Legacy or Enhanced.
-- Camera and viewport controls have been verified.
-- Test the proposed Ollama local-model route (`qwen3:4b` through `ANTHROPIC_BASE_URL=http://localhost:11434`). If the Agent SDK's requests are incompatible, implement and test a supported alternative backend before relying on automated placement.
-- Create a disposable scene using only existing GTA V props.
-- Export a tiny scene and inspect the output files.
-
-**Acceptance:** reproducible setup notes, a small exported test scene, and a recorded target edition/platform.
-
-## Phase 3 — First prop-based scene
-
-- Build a small Dushanbe-inspired roadside or plaza scene using existing game props.
-- Review scale, alignment, collision, visibility, and placement from multiple angles.
-- Export to the chosen format and test it in the stated game edition/platform.
+- Export the small scene to the selected format and inspect the files.
+- Test the output in the stated edition/platform; record the environment and results.
 - Keep the exported scene separate from the fictional-coordinate block planning JSON until a valid transform is documented.
 
-**Acceptance:** a small scene is visibly correct in the editor and passes a recorded in-game test.
+**Acceptance:** a small prop scene passes a recorded test in the chosen game edition/platform.
 
 ## Phase 4 — Original city geometry
 
