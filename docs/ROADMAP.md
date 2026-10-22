@@ -1,61 +1,63 @@
 # Project roadmap
 
-This roadmap separates planning, prop-scene experiments, custom asset creation, and in-game testing. A milestone is complete only when its acceptance criteria have been checked.
+The goal is a believable, expandable Dushanbe-inspired GTA V map, not a collection of isolated props. Each phase must end with reviewable files and explicit checks before the next phase expands scope.
 
-## Phase 0 — Project foundation
+## Phase 0 — Development foundation
 
-- [x] Add contributor/agent rules and legal asset boundaries.
-- [x] Add an illustrative central-block JSON prototype.
-- [x] Add deterministic data validation and four unit tests.
-- [x] Add CI for validation and tests.
-- [x] Verify that the local GTA V Map Agent editor launches and CodeWalker renders the world.
-- [x] Verify camera navigation in the embedded 3D view.
-- [x] Verify that Ollama `qwen3:4b` can place one existing GTA V streetlight through the editor.
+- [x] Set up repository rules, offline JSON validation, tests, and CI.
+- [x] Start GTA V Map Agent and verify embedded CodeWalker world and camera.
+- [x] Verify local Ollama `qwen3:4b` can place one existing game prop.
+- [ ] Record exact target installation: GTA V Legacy or Enhanced.
+- [ ] Decide deployment target: single-player mod or named multiplayer platform.
 
-**Remaining:** complex multi-object placement, critic/review, export and in-game testing are not yet verified. Record the target GTA V edition (Legacy or Enhanced) and target platform before making compatibility claims.
+**Acceptance:** target edition/platform noted; local editor/agent setup recorded.
 
-## Phase 1 — First prop-based public square
+## Phase 1 — Central Dushanbe vertical slice
 
-- Keep the confirmed streetlight as the first smoke-test prop.
-- Create a small Dushanbe-inspired public square with two benches facing each other, four streetlights total, and three planters.
-- Use only existing props and a dedicated scene folder; do not create custom models in this step.
-- Inspect the arrangement from several angles and resolve validation errors.
-- Export JSON for review before attempting the target game format.
+Proposed scope: Istiklol Square and a short adjoining boulevard, including the central monument/plaza, street/curb layout, pedestrian paths, landscape beds, a few surrounding building masses, and vehicle dressing.
 
-**Acceptance:** the requested prop layout appears in the editor, placement validation is clean or remaining limitations are documented, and a JSON export can be inspected.
+- Establish reference images, source URLs, dates, proportions, and confidence notes.
+- Set up a documented local coordinate frame and scale; do not invent surveyed coordinates.
+- Build a greybox in Blender: terrain/base, road corridors, plaza footprint, sidewalks, simple building volumes, and landmark massing.
+- Review dimensions and sightlines against references from aerial and street-level views.
+- Store original source geometry and metadata in the project; keep GTA game files out of Git.
+- Keep the existing Map Agent lamp as a tool test, not as the foundation of the city geometry.
 
-## Phase 2 — Define the playable slice
+**Acceptance:** reviewable greybox source, a scene layout with documented dimensions, and a block-by-block list of assets still needed.
 
-- Choose a small Dushanbe-inspired location or landmark for the first intended release.
-- Decide whether the first test targets single-player (for example, a Menyoo placement export) or a multiplayer server/resource format.
-- Record reference sources and dates; separate verified observations from estimates.
-- Define the relationship between the project's local planning coordinates and the chosen GTA V world location.
-- Keep prototype coordinates fictional until measured or sourced.
+## Phase 2 — GTA V asset pipeline proof
 
-**Acceptance:** chosen slice and target platform documented; source register and coordinate conventions established.
+- Install/select a Blender version and Sollumz version from their official upstream sources.
+- Record the chosen GTA V edition and verify the exporter and CodeWalker can inspect one original simple asset.
+- Export a small original road/plaza segment plus one simple building mass, including collision if the selected workflow requires it.
+- Inspect exported files in CodeWalker. Do not yet claim in-game compatibility.
+- Resolve LOD, texture, collision, and YMAP organization rules before expanding the asset count.
 
-## Phase 3 — Verify export and game compatibility
+**Acceptance:** one original geometry test exported and readable in the toolchain with exact versions and steps documented.
 
-- Confirm which game installation CodeWalker reads and whether it is Legacy or Enhanced.
-- Export the small scene to the selected format and inspect the files.
-- Test the output in the stated edition/platform; record the environment and results.
-- Keep the exported scene separate from the fictional-coordinate block planning JSON until a valid transform is documented.
+## Phase 3 — Build the first complete city slice
 
-**Acceptance:** a small prop scene passes a recorded test in the chosen game edition/platform.
+- Replace greybox blocks with original architectural shapes and facades inspired by documented references.
+- Build the landmark silhouette as original geometry rather than assuming a matching GTA prop exists.
+- Add sidewalks, planted areas, street furniture, signs, road markings, and other visual details.
+- Add parked decorative vehicles only after the geometry is stable. Drivable vehicles and live traffic behavior may require scripts/game systems beyond a static map file.
+- Use Map Agent for optional existing-prop dressing and check each resulting placement.
 
-## Phase 4 — Original city geometry
+**Acceptance:** the slice is visually coherent in the editor, scale and collisions are reviewed, and all new assets have source and license notes.
 
-- Research and verify a suitable pipeline for original terrain, roads, sidewalks, and building models.
-- Create original geometry and textures, with documented scale, collision, and licensing.
-- Test one small building/road segment before increasing scope.
-- Do not claim that prop placement alone recreates Dushanbe or supplies new building interiors.
+## Phase 4 — Export and in-game verification
 
-**Acceptance:** one original geometry segment exports, loads, and is verified in the target edition.
+- Export to the correct format for the chosen GTA V edition and deployment platform.
+- Test in the target environment with a clean log; verify streaming, collisions, visibility, LODs, and performance.
+- Record issues and fix them before extending to adjacent blocks.
 
-## Phase 5 — Expand carefully
+**Acceptance:** a human tester confirms the city slice loads and works in the exact stated edition/platform.
 
-- Add adjacent blocks, recognizable landmarks, and original visual details in small pull requests.
-- Track provenance and licenses for all non-original reference material.
-- Run automated checks on every change and in-game verification when a runnable slice exists.
+## Phase 5 — Expand toward a larger Dushanbe map
 
-**Acceptance:** each area has source data, asset provenance, review notes, and test evidence.
+- Extend from the first slice into adjacent roads and blocks in reviewable increments.
+- Add more landmarks, building styles, public spaces, and traffic dressing.
+- Keep a source register and asset provenance for every imported/reference item.
+- Continue automated data checks and repeat in-game tests at milestone boundaries.
+
+**Acceptance:** every area has editable sources, asset inventory, provenance, validation, and test evidence.
