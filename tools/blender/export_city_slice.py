@@ -35,8 +35,6 @@ SCENE_COLLECTIONS = (
     ("03_Landmark_Blockout", "dsh_03_landmark"),
     ("04_Building_Masses", "dsh_04_buildings"),
     ("05_Landscape", "dsh_05_landscape"),
-    ("06_Vehicle_Proxies", "dsh_06_vehicles"),
-    ("07_Facade_Detail", "dsh_07_facades"),
     ("08_Street_Furniture", "dsh_08_furniture"),
 )
 YMAP_NAME = "dushanbe_istiklol"
@@ -164,7 +162,7 @@ def configure_materials_and_meshes(collections, texture_dir: Path):
     material_colours = {}
     for collection in collections:
         for obj in collection.all_objects:
-            if obj.type != "MESH":
+            if obj.type != "MESH" or obj.get("dushanbe_exclude_from_game", False):
                 continue
             for material in obj.data.materials:
                 if material is not None and material.name not in material_colours:
@@ -172,7 +170,7 @@ def configure_materials_and_meshes(collections, texture_dir: Path):
 
     for collection in collections:
         for obj in list(collection.all_objects):
-            if obj.type != "MESH":
+            if obj.type != "MESH" or obj.get("dushanbe_exclude_from_game", False):
                 continue
             if not obj.data.materials or all(mat is None for mat in obj.data.materials):
                 fallback = bpy.data.materials.get("DushanbeGreybox_Ground")
@@ -211,7 +209,10 @@ def configure_materials_and_meshes(collections, texture_dir: Path):
 
 
 def find_meshes(collection):
-    return [obj for obj in collection.all_objects if obj.type == "MESH"]
+    return [
+        obj for obj in collection.all_objects
+        if obj.type == "MESH" and not obj.get("dushanbe_exclude_from_game", False)
+    ]
 
 
 def convert_collections_to_drawables(collections):
@@ -353,7 +354,19 @@ def validate_xml_exports(output_dir: Path, drawables, mesh_count: int, material_
         "export_format": "CodeWalker XML (CWXML)",
         "target_game_version": "GEN8 (GTA V Legacy)",
         "scene": ROOT_NAME,
-        "coordinate_status": "schematic local coordinates only; not GTA V world coordinates",
+        "coordinate_status": "OSM-derived local metric coordinates anchored at Istiklol Monument; not GTA V world coordinates",
+        "osm_data": {
+            "source": "OpenStreetMap contributors / ODbL 1.0",
+            "anchor_lat_lon": [38.59124, 68.78162],
+            "building_count": int(bpy.context.scene.get("dushanbe_osm_buildings", 0)),
+            "procedural_facade_window_count": int(bpy.context.scene.get("dushanbe_osm_windows", 0)),
+            "road_way_count": int(bpy.context.scene.get("dushanbe_osm_road_ways", 0)),
+            "road_segment_count": int(bpy.context.scene.get("dushanbe_osm_road_segments", 0)),
+            "green_area_count": int(bpy.context.scene.get("dushanbe_osm_green_areas", 0)),
+            "plaza_polygon_count": int(bpy.context.scene.get("dushanbe_osm_plaza_polygons", 0)),
+            "water_area_count": int(bpy.context.scene.get("dushanbe_osm_water_areas", 0)),
+            "mapped_tree_count": int(bpy.context.scene.get("dushanbe_osm_mapped_trees", 0)),
+        },
         "source_mesh_count": mesh_count,
         "source_material_count": material_count,
         "texture_count": len(set(texture_map.values())),
@@ -371,10 +384,11 @@ def validate_xml_exports(output_dir: Path, drawables, mesh_count: int, material_
         },
         "limitations": [
             "This is a first-pass CWXML export, not the game's binary files.",
-            "All dimensions are schematic, not surveyed Dushanbe measurements.",
-            "Coordinates are not mapped to GTA V world coordinates.",
+            "Building footprints and road centerlines are OSM-derived; absent heights and facade details are estimated.",
+            "This is not photogrammetry or a one-to-one facade reconstruction.",
+            "Coordinates are local metric coordinates anchored at Istiklol Monument, not GTA V world coordinates.",
             "There are no proper collision YBN files or complete LOD/SLOD hierarchy yet.",
-            "Custom static cars and lights are geometry placeholders, not functional GTA traffic/lights.",
+            "Static car proxies are excluded from exported game geometry; GTA traffic and vehicle archetypes are a separate task.",
             "CodeWalker conversion/import and a local GTA V Legacy in-game test are still required.",
             "GTA V Enhanced / GEN9 has not been tested.",
         ],
