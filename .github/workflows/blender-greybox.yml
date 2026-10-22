@@ -1,0 +1,70 @@
+name: Build Blender greybox artifact
+
+on:
+  push:
+    branches:
+      - main
+      - "automation/**"
+      - "feature/**"
+    paths:
+      - "tools/blender/**"
+      - ".github/workflows/blender-greybox.yml"
+  pull_request:
+    paths:
+      - "tools/blender/**"
+      - ".github/workflows/blender-greybox.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-greybox:
+    name: Build editable Blender scene and preview
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes blender
+
+      - name: Show Blender version
+        run: blender --version
+
+      - name: Build scene, preview and manifest
+        run: |
+          mkdir -p artifacts
+          export DUSHANBE_BUILD_OUTPUT="$GITHUB_WORKSPACE/artifacts"
+          blender --background --factory-startup --python tools/blender/build_greybox_artifact.py
+
+      - name: Validate build outputs
+        run: |
+          test -s artifacts/Dushanbe_Istiklol_Greybox.blend
+          test -s artifacts/Dushanbe_Istiklol_preview.png
+          test -s artifacts/greybox_manifest.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("artifacts/greybox_manifest.json").read_text(encoding="utf-8"))
+          assert manifest["status"] == "schematic_greybox_built", manifest
+          assert manifest["game_ready"] is False, manifest
+          assert manifest["mesh_objects"] >= 50, manifest
+          print(f"Validated {manifest['mesh_objects']} meshes in Blender {manifest['blender_version']}")
+          PY
+
+      - name: Upload reviewable build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dushanbe-Istiklol-Greybox
+          path: |
+            artifacts/Dushanbe_Istiklol_Greybox.blend
+            artifacts/Dushanbe_Istiklol_preview.png
+            artifacts/greybox_manifest.json
+          if-no-files-found: warn
+          retention-days: 14
