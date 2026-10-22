@@ -83,8 +83,8 @@ def validate_and_describe_scene():
 
     objects = list(root.all_objects)
     meshes = [obj for obj in objects if obj.type == "MESH"]
-    if len(meshes) < 50:
-        raise RuntimeError(f"Greybox looks incomplete: expected >= 50 mesh objects, found {len(meshes)}")
+    if len(meshes) < 250:
+        raise RuntimeError(f"Greybox looks incomplete: expected >= 250 mesh objects, found {len(meshes)}")
 
     material_names = sorted({
         slot.material.name
