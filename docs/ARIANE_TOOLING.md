@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document tracks the tools and checks needed to build an original GTA V map project inspired by Dushanbe. A loaded viewer is only the first technical milestone; scene generation, export, game-edition compatibility, and in-game behavior still require separate verification.
+This document tracks the tools and checks needed to build an original GTA V map project inspired by Dushanbe. A loaded viewer and one placed object are early milestones; complex scenes, exports, game-edition compatibility, and in-game behavior still require separate verification.
 
 ## Current toolchain
 
@@ -11,8 +11,9 @@ This document tracks the tools and checks needed to build an original GTA V map 
 - Upstream: https://github.com/cngil/gtav-mapagent
 - Intended role: inspect the GTA V world, place existing GTA V props, validate placements, and export prop scenes.
 - Local status on 2026-10-22: the Electron editor starts, the embedded CodeWalker world reaches the ready state, and the user confirms camera navigation works.
-- AI status with Anthropic cloud: blocked. On 2026-10-22, running `claude` produced a 10-second timeout connecting to `api.anthropic.com`; the user says they are in Russia. Repeating login is not the solution. A local Ollama model with its Anthropic-compatible Messages API is the proposed experiment; it does not depend on Anthropic cloud access, but app compatibility is not yet verified.
-- Recovery check: if the user is physically in a region officially supported by Anthropic, test another ordinary network (for example, a phone hotspot) and check local firewall/proxy settings. If the user is in an unsupported region, do not attempt to bypass regional availability rules; use a model/provider available to them and port the app's agent integration instead.
+- AI status: the user confirmed that after configuring Ollama's local Anthropic-compatible API and selecting `qwen3:4b`, Map Agent successfully placed one existing streetlight prop. This verifies the basic path from the local model to a map tool call.
+- Anthropic cloud: Claude Code timed out connecting to `api.anthropic.com`; the user's current location is Russia. Do not keep retrying cloud login as the path to local inference.
+- Still unverified: larger multi-object scene construction, tool-call reliability across a longer request, the independent critic/review loop, and map export/game testing.
 - Important limitation: this tool does not author new terrain, custom building models, interiors, or a full road network. It is suitable for a prop-scene prototype, not by itself for replacing a real city or producing all of Dushanbe from scratch.
 - Outputs described upstream include JSON and YMAP, plus platform-specific exports such as Menyoo and FiveM. Test the selected output in the intended edition/platform before relying on it.
 
@@ -31,24 +32,26 @@ Before a map slice is called complete:
 - Record the GTA V edition (Legacy or Enhanced), installation used by CodeWalker, and intended export format.
 - Record tool versions, upstream URLs, licenses, and retrieval/test dates.
 - Confirm the 3D camera and scene/project controls work.
-- Confirm the AI can place a small number of existing props, if using the agent workflow.
+- Confirm the AI can place a small number of existing props.
+- Inspect every placement from multiple angles and review any validation report.
 - Export a tiny test scene and inspect the exported files.
 - Test it in the intended game edition/platform; record the result, steps, and any limitations.
 - Keep proprietary game files and extracted content out of this repository.
 
-## Current first experiment
+## Current next experiment
 
-1. The CodeWalker world and camera controls have been verified.
-2. Use the local Ollama compatibility experiment before making code changes. Install Ollama for Windows from https://ollama.com/download/windows and pull `qwen3:4b` (`ollama pull qwen3:4b`).
-3. In the same PowerShell session, set `$env:ANTHROPIC_BASE_URL = "http://localhost:11434"`, `$env:ANTHROPIC_AUTH_TOKEN = "ollama"`, `$env:ANTHROPIC_API_KEY = ""`, and `$env:MAP_EDITOR_MODEL = "qwen3:4b"`. Test with `claude --model qwen3:4b` and a simple prompt. These are proposed settings, not a confirmed working configuration for this app.
-4. If the simple CLI test succeeds, close any running Map Agent window and start `npm start` from the same PowerShell session so the app inherits those environment variables. If the app still fails, capture the exact error: Claude Agent SDK may use features the local compatibility endpoint does not fully implement. Do not publish API keys or tokens.
-5. After an agent can respond, create a disposable project with a small prop arrangement, inspect it, and export JSON before trying a game-specific format.
+1. Keep the existing test streetlight; do not rebuild it.
+2. In a disposable project, ask the local agent for a small square with two facing benches, four streetlights in total, and three planters. Specify the placement/checking process in the prompt, and ask the agent not to create custom models.
+3. Inspect the result from several angles and correct any collision/floating issues reported by validation.
+4. Save the project and export JSON first so the placements can be reviewed.
+5. Only test a game-specific format after deciding whether the target is Legacy or Enhanced and whether the intended usage is single-player or multiplayer.
 6. Keep the result separate from the illustrative planning JSON until a documented coordinate mapping exists.
 
 ## Status
 
 - CodeWalker world loading: verified locally on 2026-10-22.
 - Camera navigation: verified by user on 2026-10-22.
-- Claude Code login / Anthropic cloud: blocked by repeated API connection timeout. Local Ollama model route: proposed, not yet tested.
+- Local model and first prop placement: confirmed by user on 2026-10-22 with Ollama `qwen3:4b`.
+- Longer scene generation and critic/review: not yet verified.
 - Game export and in-game behavior: not tested.
 - The planning prototype remains illustrative local-coordinate data, not a game-ready asset.
