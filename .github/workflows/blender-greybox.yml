@@ -234,33 +234,32 @@ jobs:
       - name: Validate binary resource package
         shell: pwsh
         run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
+          $root = Join-Path $env:GITHUB_WORKSPACE "artifacts\native-gen8"
+          $stream = Join-Path $root "stream"
+          $manifestPath = Join-Path $root "native_conversion_manifest.json"
+          if (!(Test-Path $manifestPath)) { throw "Native conversion manifest not found: $manifestPath" }
+          $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 
-          root = Path("artifacts/native-gen8")
-          stream = root / "stream"
-          manifest_path = root / "native_conversion_manifest.json"
-          assert manifest_path.is_file(), f"Missing manifest: {manifest_path}"
-          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-          assert manifest["status"] == "codewalker_gen8_binary_conversion_passed", manifest
-          assert manifest["game_ready"] is False, manifest
-          assert manifest["target_game_edition"] == "GTA V Legacy / GEN8", manifest
-          assert manifest["ydr_count"] == 9, manifest
-          assert manifest["ytyp_archetype_count"] >= 9, manifest
-          assert manifest["ymap_entity_count"] >= 9, manifest
+          if ($manifest.status -ne "codewalker_gen8_binary_conversion_passed") { throw "Unexpected CodeWalker result status: $($manifest.status)" }
+          if ($manifest.game_ready -ne $false) { throw "Manifest must keep game_ready=false until in-game testing." }
+          if ($manifest.target_game_edition -ne "GTA V Legacy / GEN8") { throw "Unexpected edition target." }
+          if ($manifest.ydr_count -ne 9) { throw "Expected 9 YDRs, got $($manifest.ydr_count)" }
+          if ($manifest.ytyp_archetype_count -lt 9) { throw "YTYP archetype count too low." }
+          if ($manifest.ymap_entity_count -lt 9) { throw "YMAP entity count too low." }
 
-          assets = sorted(stream.glob("*.ydr"))
-          assert len(assets) == 9, f"Expected 9 native YDRs, got {len(assets)}"
-          assets += [stream / "dushanbe_istiklol.ytyp", stream / "dushanbe_istiklol.ymap"]
-          for path in assets:
-              assert path.is_file(), f"Missing native resource: {path}"
-              data = path.read_bytes()
-              assert data[:4] == b"RSC7", f"Missing RSC7 magic: {path}"
-              assert len(data) >= 128, f"Native resource too small: {path}"
-          print(f"Validated {len(assets)} RSC7 binary resources through CodeWalker readback.")
-          print("The package remains a local-coordinate preview, not a playable map.")
-          PY
+          $assets = @(Get-ChildItem -LiteralPath $stream -Filter "*.ydr" -File)
+          if ($assets.Count -ne 9) { throw "Expected 9 native YDRs, got $($assets.Count)" }
+          $assets += Get-Item -LiteralPath (Join-Path $stream "dushanbe_istiklol.ytyp")
+          $assets += Get-Item -LiteralPath (Join-Path $stream "dushanbe_istiklol.ymap")
+          foreach ($asset in $assets) {
+            if (!(Test-Path -LiteralPath $asset.FullName)) { throw "Missing native resource: $($asset.FullName)" }
+            $bytes = [System.IO.File]::ReadAllBytes($asset.FullName)
+            if ($bytes.Length -lt 128) { throw "Native resource is too small: $($asset.Name)" }
+            $magic = [System.Text.Encoding]::ASCII.GetString($bytes, 0, 4)
+            if ($magic -ne "RSC7") { throw "Missing RSC7 header in $($asset.Name): $magic" }
+          }
+          Write-Host "Validated $($assets.Count) RSC7 binary resources through CodeWalker readback."
+          Write-Host "The package remains a local-coordinate preview, not a playable map."
 
       - name: Upload native GEN8 resource preview
         if: always()
