@@ -7,8 +7,9 @@ The repository contains planning data, validation tools, and a documented path t
 ## Current status
 
 - Project foundation and offline JSON validation are in place.
-- **Local tool launch verified on 2026-10-22:** GTA V Map Agent opened and its embedded CodeWalker 3D world loaded.
-- **AI placement is not yet verified:** Claude Code could not connect to Anthropic services from the current environment, so the first prop-placement request has not been completed.
+- **Local tool launch and 3D world loading verified on 2026-10-22:** GTA V Map Agent opened and its embedded CodeWalker 3D world loaded.
+- **Camera navigation verified on 2026-10-22:** the user confirmed that camera controls work.
+- **AI placement is not yet verified:** Claude Code previously could not connect to Anthropic services from the current environment; a first prop-placement request has not yet been confirmed successful.
 - **In-game export/testing has not been performed.**
 - The exact target installation—GTA V Legacy or Enhanced—must be recorded before making edition-specific compatibility claims.
 
