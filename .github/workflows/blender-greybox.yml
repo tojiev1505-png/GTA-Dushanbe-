@@ -22,9 +22,9 @@ permissions:
 
 jobs:
   build-greybox:
-    name: Build editable Blender scene, preview and Sollumz export proof
+    name: Build Blender scene and export city slice through Sollumz
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
 
       - name: Check Python syntax
         run: |
-          python3 -m py_compile tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py tools/blender/sollumz_export_smoke.py
+          python3 -m py_compile tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py tools/blender/sollumz_export_smoke.py tools/blender/export_city_slice.py
 
       - name: Show Blender version
         run: blender --version
@@ -108,15 +108,52 @@ jobs:
           print("This is a CWXML pipeline proof only, not an in-game map.")
           PY
 
-      - name: Upload reviewable build and export-proof artifacts
+      - name: Export city slice drawables and YTYP/YMAP in CWXML
+        env:
+          DUSHANBE_INPUT_BLEND: ${{ github.workspace }}/artifacts/Dushanbe_Istiklol_Greybox.blend
+          DUSHANBE_CITY_EXPORT_OUTPUT: ${{ github.workspace }}/artifacts/city-export
+        run: |
+          mkdir -p "$DUSHANBE_CITY_EXPORT_OUTPUT"
+          blender --background --factory-startup --python tools/blender/export_city_slice.py
+
+      - name: Validate city slice CWXML package
+        run: |
+          test -s artifacts/city-export/Dushanbe_Istiklol_Sollumz_Prepared.blend
+          test -s artifacts/city-export/city_slice_export_manifest.json
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          out = Path("artifacts/city-export")
+          manifest = json.loads((out / "city_slice_export_manifest.json").read_text(encoding="utf-8"))
+          assert manifest["status"] == "city_slice_cwxml_export_pipeline_passed", manifest
+          assert manifest["game_ready"] is False, manifest
+          assert manifest["drawable_count"] == 9, manifest
+          assert len(manifest["ydr_exports"]) == 9, manifest
+          assert manifest["ytyp_export"]["archetype_count"] >= 9, manifest
+          assert manifest["ymap_export"]["entity_count"] >= 9, manifest
+          for record in manifest["ydr_exports"]:
+              path = out / record["file"]
+              assert path.is_file(), f"Missing YDR XML: {path}"
+              assert ET.parse(path).getroot().tag, f"Invalid XML: {path}"
+          assert (out / manifest["ytyp_export"]["file"]).is_file(), manifest
+          assert (out / manifest["ymap_export"]["file"]).is_file(), manifest
+          print(f"Validated {len(manifest['ydr_exports'])} YDRs, one YTYP with {manifest['ytyp_export']['archetype_count']} archetypes,")
+          print(f"and one YMAP with {manifest['ymap_export']['entity_count']} entities.")
+          print("CWXML export validation passed. CodeWalker/game validation is still separate.")
+          PY
+
+      - name: Upload reviewable scene and city export package
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Dushanbe-Istiklol-Greybox-and-Sollumz-proof
+          name: Dushanbe-Istiklol-CitySlice-CWXML
           path: |
             artifacts/Dushanbe_Istiklol_Greybox.blend
             artifacts/Dushanbe_Istiklol_preview.png
             artifacts/greybox_manifest.json
             artifacts/sollumz-smoke/**
+            artifacts/city-export/**
           if-no-files-found: warn
           retention-days: 14
