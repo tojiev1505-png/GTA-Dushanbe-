@@ -18,12 +18,14 @@ Proposed scope: Istiklol Square and a short adjoining boulevard, including the c
 
 - Establish reference images, source URLs, dates, proportions, and confidence notes.
 - Set up a documented local coordinate frame and scale; do not invent surveyed coordinates.
-- Build a greybox in Blender: terrain/base, road corridors, plaza footprint, sidewalks, simple building volumes, and landmark massing.
+- [x] Add `tools/blender/create_istiklol_greybox.py`, an editable Blender greybox generator for the base, road corridors, plaza footprint, sidewalks, simple building volumes, landmark massing, tree proxies and vehicle placeholders (dimensions are schematic).
+- [ ] Run the script in Blender and review the generated scene; correct composition and scale against selected references.
+- Refine the greybox: terrain/base, road corridors, plaza footprint, sidewalks, simple building volumes, and landmark massing.
 - Review dimensions and sightlines against references from aerial and street-level views.
 - Store original source geometry and metadata in the project; keep GTA game files out of Git.
 - Keep the existing Map Agent lamp as a tool test, not as the foundation of the city geometry.
 
-**Acceptance:** reviewable greybox source, a scene layout with documented dimensions, and a block-by-block list of assets still needed.
+**Acceptance:** script runs in the chosen Blender version; greybox is visually reviewed; dimensions are documented as estimates or sourced measurements; a block-by-block list of assets still needed is recorded.
 
 ## Phase 2 — GTA V asset pipeline proof
 
