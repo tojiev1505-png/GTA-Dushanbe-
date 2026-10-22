@@ -38,7 +38,7 @@ jobs:
 
       - name: Check Python syntax
         run: |
-          python3 -m py_compile tools/osm/fetch_dushanbe_slice.py tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py tools/blender/import_osm_city_slice.py tools/blender/sollumz_export_smoke.py tools/blender/export_city_slice.py
+          python3 -m py_compile tools/osm/fetch_dushanbe_slice.py tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py tools/blender/import_osm_city_slice.py tools/blender/build_istiklol_monument.py tools/blender/sollumz_export_smoke.py tools/blender/export_city_slice.py
 
       - name: Show Blender version
         run: blender --version
@@ -72,7 +72,14 @@ jobs:
           assert manifest["osm_data"]["imported"] is True, manifest
           assert manifest["osm_data"]["building_count"] >= 50, manifest
           assert manifest["osm_data"]["road_way_count"] >= 40, manifest
+          assert manifest["monument"]["target_overall_height_m"] == 121.0, manifest
+          assert manifest["monument"]["gate_count"] == 7, manifest
           assert manifest["osm_data"]["procedural_facade_window_count"] >= 100, manifest
+          assert manifest["monument"]["model_type"] == "original_parametric_reference_based", manifest
+          assert manifest["monument"]["target_overall_height_m"] == 121.0, manifest
+          assert manifest["monument"]["lower_architectural_section_m"] == 30.0, manifest
+          assert manifest["monument"]["gate_count"] == 7, manifest
+          assert manifest["monument"]["mesh_objects"] >= 4, manifest
           print(f"Validated {manifest['mesh_objects']} Blender meshes, {manifest['osm_data']['building_count']} OSM buildings, and {manifest['osm_data']['road_way_count']} road ways.")
           PY
 

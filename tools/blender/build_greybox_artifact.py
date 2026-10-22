@@ -19,6 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_SCRIPT = REPO_ROOT / "tools" / "blender" / "create_istiklol_greybox.py"
 DETAIL_SCRIPT = REPO_ROOT / "tools" / "blender" / "add_city_details.py"
 OSM_SCRIPT = REPO_ROOT / "tools" / "blender" / "import_osm_city_slice.py"
+MONUMENT_SCRIPT = REPO_ROOT / "tools" / "blender" / "build_istiklol_monument.py"
 OUTPUT_DIR = Path(os.environ.get("DUSHANBE_BUILD_OUTPUT", REPO_ROOT / "artifacts")).resolve()
 ROOT_NAME = "Dushanbe_Istiklol_Greybox"
 REQUIRED_COLLECTIONS = (
@@ -120,6 +121,14 @@ def validate_and_describe_scene():
         "game_ready": False,
         "units": "metres (illustrative local design units only)",
         "coordinate_status": "OSM local metric projection anchored at Istiklol Monument; not GTA V world coordinates",
+        "monument": {
+            "model_type": bpy.context.scene.get("dushanbe_monument_model_type", "not generated"),
+            "target_overall_height_m": float(bpy.context.scene.get("dushanbe_monument_target_height_m", 0.0)),
+            "lower_architectural_section_m": float(bpy.context.scene.get("dushanbe_monument_lower_section_m", 0.0)),
+            "gate_count": int(bpy.context.scene.get("dushanbe_monument_gate_count", 0)),
+            "mesh_objects": int(bpy.context.scene.get("dushanbe_monument_mesh_objects", 0)),
+            "accuracy_note": "Original procedural reference-based model, not photogrammetry; small ornament and materials remain approximate.",
+        },
         "osm_data": {
             "imported": bool(bpy.context.scene.get("dushanbe_osm_imported", False)),
             "source": bpy.context.scene.get("dushanbe_osm_source", "not imported"),
@@ -152,6 +161,7 @@ def validate_and_describe_scene():
             "This build does not perform Sollumz export to YMAP/YDR/YBN.",
             "This build has not been tested in GTA V Legacy or GTA V Enhanced.",
             "Preview camera and light are for inspection only, not map assets.",
+            "The Istiklol monument uses published 121 m / 30 m dimensions and a procedural architectural reconstruction; fine ornament is approximate, not photogrammetry.",
             "Vehicle shapes are non-functional visual placeholders, not drivable GTA vehicles.",
             "Street lights, signals, benches, shopfronts and windows are schematic mesh details only.",
         ],
@@ -165,6 +175,8 @@ def main():
 
     if not DETAIL_SCRIPT.is_file():
         raise FileNotFoundError(f"City detail script was not found: {DETAIL_SCRIPT}")
+    if not MONUMENT_SCRIPT.is_file():
+        raise FileNotFoundError(f"Detailed Istiklol monument script was not found: {MONUMENT_SCRIPT}")
 
     # Generate the base scene, add second-pass details, then replace placeholder masses
     # with georeferenced building footprints and road geometry from the OSM extract.
@@ -175,6 +187,7 @@ def main():
     runpy.run_path(str(SOURCE_SCRIPT), run_name="__main__")
     runpy.run_path(str(DETAIL_SCRIPT), run_name="__main__")
     runpy.run_path(str(OSM_SCRIPT), run_name="__main__")
+    runpy.run_path(str(MONUMENT_SCRIPT), run_name="__main__")
 
     scene = bpy.context.scene
     scene.unit_settings.system = "METRIC"

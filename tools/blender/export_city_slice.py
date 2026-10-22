@@ -355,6 +355,13 @@ def validate_xml_exports(output_dir: Path, drawables, mesh_count: int, material_
         "target_game_version": "GEN8 (GTA V Legacy)",
         "scene": ROOT_NAME,
         "coordinate_status": "OSM-derived local metric coordinates anchored at Istiklol Monument; not GTA V world coordinates",
+        "monument": {
+            "model_type": bpy.context.scene.get("dushanbe_monument_model_type", "not generated"),
+            "target_overall_height_m": float(bpy.context.scene.get("dushanbe_monument_target_height_m", 0.0)),
+            "lower_architectural_section_m": float(bpy.context.scene.get("dushanbe_monument_lower_section_m", 0.0)),
+            "gate_count": int(bpy.context.scene.get("dushanbe_monument_gate_count", 0)),
+            "mesh_objects": int(bpy.context.scene.get("dushanbe_monument_mesh_objects", 0)),
+        },
         "osm_data": {
             "source": "OpenStreetMap contributors / ODbL 1.0",
             "anchor_lat_lon": [38.59124, 68.78162],

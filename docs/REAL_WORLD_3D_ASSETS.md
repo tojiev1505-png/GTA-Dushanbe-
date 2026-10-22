@@ -37,3 +37,22 @@ licensed downloadable model of that exact object was found in this pass. To make
 landmark one-to-one, we need a reusable model from its author, a paid asset with suitable
 project/mod distribution rights, or a photogrammetry/modeling pass from multi-view reference
 imagery. Do not replace it with a vaguely similar monument and claim accuracy.
+
+
+## Current Istiklol Monument: procedural replacement added to the project
+
+The Blender build now hides the old 20 m cylinder-and-sphere placeholder and creates an original
+reference-based model with the published overall height of 121 m and lower architectural section
+of 30 m. Its geometry includes a multi-sided lower plinth, seven arch motifs, radial pavilions,
+cupolas, pilasters, a blue segmented/twisted shaft, a viewing-gallery ring near the documented
+94 m level, gold spiral ribs, and a multi-lobed crown.
+
+Published dimension references:
+- Tajikistan Academy of Architecture and Construction: https://www.aac.tj/project/47.html
+- Khovar: https://khovar.tj/rus/2024/05/ploshhad-istiklol-etot-velichestvennyj-i-turisticheskij-obekt-goroda-dushanbe-pokoril-serdtsa-zhitelej-stolitsy/
+- Government opening report: https://akn.tj/ru/2022/09/08/opening-of-the-istiqlal-square-and-the-architectural-complex-of-the-istiqlal-symbol-in-the-city-of-dushanbe/
+
+The model is new project-authored procedural geometry; no third-party mesh or copyrighted photo
+texture is bundled. It is based on published dimensions and visible reference, not a laser scan
+or photogrammetry. Decorative tile motifs, exact roof/wall construction and material textures
+still require closer reference work or a reusable source model for truly one-to-one accuracy.
