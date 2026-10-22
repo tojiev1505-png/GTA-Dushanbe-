@@ -8,9 +8,22 @@ The repository contains planning data, validation tools, and a documented path t
 
 - Project foundation and offline JSON validation are in place.
 - **Local tool launch, 3D world loading, and camera navigation verified on 2026-10-22.**
-- **AI placement is blocked:** on 2026-10-22, Claude Code repeatedly reported `Unable to connect to Anthropic services` and a 10-second timeout connecting to `api.anthropic.com`. GTA V Map Agent therefore reports `Not logged in · Please run /login`, but the CLI cannot reach the service to complete login.
+- **AI placement is blocked with Anthropic cloud:** on 2026-10-22, Claude Code repeatedly timed out connecting to `api.anthropic.com`. Since the user is in Russia, the practical next experiment is a local Ollama model through Ollama's Anthropic-compatible API. This alternative has been documented but not yet tested with GTA V Map Agent.
 - **In-game export/testing has not been performed.**
 - The exact target installation—GTA V Legacy or Enhanced—must be recorded before making edition-specific compatibility claims.
+
+## Local AI experiment
+
+The proposed no-cloud experiment uses [Ollama for Windows](https://ollama.com/download/windows) with the `qwen3:4b` model and Ollama's Anthropic-compatible Messages API. Proposed launch settings for the same PowerShell session are:
+
+```powershell
+$env:ANTHROPIC_BASE_URL = "http://localhost:11434"
+$env:ANTHROPIC_AUTH_TOKEN = "ollama"
+$env:ANTHROPIC_API_KEY = ""
+$env:MAP_EDITOR_MODEL = "qwen3:4b"
+```
+
+This route would run inference locally rather than connecting to Anthropic. Compatibility with this app's full agent loop remains unverified; validate first with a simple `claude --model qwen3:4b` test after pulling the model, then run the editor in the same shell if successful.
 
 ## Initial prototype scope
 
