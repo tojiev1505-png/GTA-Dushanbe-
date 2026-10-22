@@ -11,7 +11,8 @@ This document tracks the tools and checks needed to build an original GTA V map 
 - Upstream: https://github.com/cngil/gtav-mapagent
 - Intended role: inspect the GTA V world, place existing GTA V props, validate placements, and export prop scenes.
 - Local status on 2026-10-22: the Electron editor starts and the embedded CodeWalker world reaches the ready state.
-- AI status: not verified. Claude Code could not reach Anthropic services from the current environment, so agent-driven prop placement is blocked until that connection/authentication issue is resolved or a supported alternative backend is implemented.
+- Camera navigation: verified by the user on 2026-10-22.
+- AI status: not yet verified. Claude Code previously could not reach Anthropic services from the current environment. The next test is a small prompt in the editor; if it fails with a connectivity or sign-in error, scene generation remains blocked until access is restored or a supported alternative backend is implemented.
 - Important limitation: this tool does not author new terrain, custom building models, interiors, or a full road network. It is suitable for a prop-scene prototype, not by itself for replacing a real city or producing all of Dushanbe from scratch.
 - Outputs described upstream include JSON and YMAP, plus platform-specific exports such as Menyoo and FiveM. Test the selected output in the intended edition/platform before relying on it.
 
@@ -29,7 +30,7 @@ Before a map slice is called complete:
 
 - Record the GTA V edition (Legacy or Enhanced), installation used by CodeWalker, and intended export format.
 - Record tool versions, upstream URLs, licenses, and retrieval/test dates.
-- Confirm the 3D camera and scene panel work.
+- Confirm the 3D camera and scene/project controls work.
 - Confirm the AI can place a small number of existing props, if using the agent workflow.
 - Export a tiny test scene and inspect the exported files.
 - Test it in the intended game edition/platform; record the result, steps, and any limitations.
@@ -37,16 +38,16 @@ Before a map slice is called complete:
 
 ## Current first experiment
 
-1. Check camera navigation in the loaded 3D view.
-2. Resolve or replace the unavailable Claude agent connection before asking Map Agent to build a scene.
-3. Create a disposable project with a very small prop arrangement near a known camera position.
-4. Export a JSON copy for inspection; only then try the intended game format.
+1. Camera navigation has been verified; keep the camera over a clear, open area.
+2. Create or select a disposable test project and send a very small prop-placement request. This also tests whether the Claude chat session is working today.
+3. If the editor reports authentication or network errors, stop retrying scene prompts and resolve that separate Claude Code connection blocker or implement a supported alternative backend.
+4. If placement succeeds, inspect the result from several angles and export a JSON copy for inspection before trying a game-specific format.
 5. Keep the result separate from the illustrative planning JSON until a documented coordinate mapping exists.
 
 ## Status
 
 - CodeWalker 3D world loading: verified locally on 2026-10-22, based on the user's run log and confirmation.
-- Camera navigation: not yet reported.
-- AI placement: blocked/not tested because the Claude Code connection to Anthropic timed out.
+- Camera navigation: verified by user confirmation on 2026-10-22.
+- AI placement: not yet verified; previous Claude Code connection attempts timed out.
 - Game export and in-game behavior: not tested.
 - The planning prototype remains illustrative local-coordinate data, not a game-ready asset.
