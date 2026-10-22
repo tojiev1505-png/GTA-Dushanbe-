@@ -300,13 +300,13 @@ def build_green_and_plazas(elements, green_collection, plaza_collection):
         if is_plaza:
             base = len(plaza_vertices)
             plaza_vertices.extend((x, y, 0.035) for x, y in points)
-            plaza_faces.append(tuple(base + i for i in range(len(points))); plaza_indices.append(0)
+            plaza_faces.append(tuple(base + i for i in range(len(points)))); plaza_indices.append(0)
             plaza_count += 1
         else:
             base = len(park_vertices)
             z = -0.065 if is_water else -0.055
             park_vertices.extend((x, y, z) for x, y in points)
-            park_faces.append(tuple(base + i for i in range(len(points)))
+            park_faces.append(tuple(base + i for i in range(len(points))))
             park_indices.append(2 if is_water else (1 if tags.get("landuse") == "forest" or tags.get("natural") == "wood" else 0))
             if is_water: water_count += 1
             else: park_count += 1
