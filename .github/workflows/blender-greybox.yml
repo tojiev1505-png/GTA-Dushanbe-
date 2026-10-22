@@ -6,10 +6,12 @@ on:
       - main
     paths:
       - "tools/blender/**"
+      - "tools/codewalker/**"
       - ".github/workflows/blender-greybox.yml"
   pull_request:
     paths:
       - "tools/blender/**"
+      - "tools/codewalker/**"
       - ".github/workflows/blender-greybox.yml"
   workflow_dispatch:
 
@@ -135,13 +137,36 @@ jobs:
           assert manifest["ymap_export"]["entity_count"] >= 9, manifest
           for record in manifest["ydr_exports"]:
               path = out / record["file"]
-              assert path.is_file(), f"Missing YDR XML: {path}"
-              assert ET.parse(path).getroot().tag, f"Invalid XML: {path}"
-          assert (out / manifest["ytyp_export"]["file"]).is_file(), manifest
-          assert (out / manifest["ymap_export"]["file"]).is_file(), manifest
+              assert path.is_file(), f"Missing YDR CWXML: {path}"
+              assert ET.parse(path).getroot().tag == "Drawable", f"Invalid YDR CWXML: {path}"
+          assert ET.parse(out / manifest["ytyp_export"]["file"]).getroot().tag == "CMapTypes", manifest
+          assert ET.parse(out / manifest["ymap_export"]["file"]).getroot().tag == "CMapData", manifest
           print(f"Validated {len(manifest['ydr_exports'])} YDRs, one YTYP with {manifest['ytyp_export']['archetype_count']} archetypes,")
           print(f"and one YMAP with {manifest['ymap_export']['entity_count']} entities.")
-          print("CWXML export validation passed. CodeWalker/game validation is still separate.")
+          print("CWXML structure checks passed; native conversion is a separate job.")
+          PY
+
+      - name: Validate DDS payloads match Sollumz DXT1 declarations
+        run: |
+          python3 - <<'PY'
+          import math
+          import struct
+          from pathlib import Path
+
+          root = Path("artifacts/city-export")
+          dds_files = sorted(root.rglob("*.dds"))
+          assert dds_files, "No original DDS swatches were generated"
+          unique = set()
+          for path in dds_files:
+              data = path.read_bytes()
+              assert data[:4] == b"DDS ", f"Invalid DDS magic: {path}"
+              assert len(data) >= 136, f"DDS too small: {path}"
+              assert data[84:88] == b"DXT1", f"Expected DXT1 FourCC in {path}, got {data[84:88]!r}"
+              height, width = struct.unpack_from("<II", data, 12)
+              expected = 128 + math.ceil(width / 4) * math.ceil(height / 4) * 8
+              assert len(data) == expected, f"DXT1 payload size mismatch for {path}: {len(data)} != {expected}"
+              unique.add((width, height, data[84:88]))
+          print(f"Validated {len(dds_files)} DXT1 DDS files; formats: {sorted((w, h, f.decode()) for w, h, f in unique)}")
           PY
 
       - name: Upload reviewable scene and city export package
@@ -155,5 +180,96 @@ jobs:
             artifacts/greybox_manifest.json
             artifacts/sollumz-smoke/**
             artifacts/city-export/**
+          if-no-files-found: warn
+          retention-days: 14
+
+  convert-native-gen8:
+    name: Convert and round-trip validate GEN8 binary resources with CodeWalker
+    needs: build-greybox
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out project source
+        uses: actions/checkout@v4
+
+      - name: Download the validated CWXML artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Dushanbe-Istiklol-CitySlice-CWXML
+          path: artifacts
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Fetch pinned CodeWalker Core source
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:RUNNER_TEMP "CodeWalker"
+          git clone --filter=blob:none --no-checkout https://github.com/dexyfex/CodeWalker.git $source
+          git -C $source checkout 485d56bec00262ed7fa472261cce7bbc6202b96e
+          if ($LASTEXITCODE -ne 0) { throw "Could not checkout the pinned CodeWalker commit." }
+          if (!(Test-Path (Join-Path $source "CodeWalker.Core\CodeWalker.Core.csproj"))) {
+            throw "Pinned CodeWalker Core project not found."
+          }
+
+      - name: Build the CodeWalker converter
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:RUNNER_TEMP "CodeWalker"
+          dotnet build tools/codewalker/CitySliceConverter.csproj --configuration Release "-p:CodeWalkerSourceDir=$source"
+          if ($LASTEXITCODE -ne 0) { throw "CodeWalker converter build failed." }
+
+      - name: Convert CWXML to native GEN8 resources and read them back
+        shell: pwsh
+        run: |
+          $input = Join-Path $env:GITHUB_WORKSPACE "artifacts\city-export"
+          $output = Join-Path $env:GITHUB_WORKSPACE "artifacts\native-gen8"
+          $converter = Join-Path $env:GITHUB_WORKSPACE "tools\codewalker\bin\Release\net8.0\CitySliceConverter.dll"
+          if (!(Test-Path $input)) { throw "CWXML folder missing: $input" }
+          dotnet $converter $input $output
+          if ($LASTEXITCODE -ne 0) { throw "CodeWalker native conversion or round-trip validation failed." }
+
+      - name: Validate binary resource package
+        shell: pwsh
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("artifacts/native-gen8")
+          stream = root / "stream"
+          manifest_path = root / "native_conversion_manifest.json"
+          assert manifest_path.is_file(), f"Missing manifest: {manifest_path}"
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          assert manifest["status"] == "codewalker_gen8_binary_conversion_passed", manifest
+          assert manifest["game_ready"] is False, manifest
+          assert manifest["target_game_edition"] == "GTA V Legacy / GEN8", manifest
+          assert manifest["ydr_count"] == 9, manifest
+          assert manifest["ytyp_archetype_count"] >= 9, manifest
+          assert manifest["ymap_entity_count"] >= 9, manifest
+
+          assets = sorted(stream.glob("*.ydr"))
+          assert len(assets) == 9, f"Expected 9 native YDRs, got {len(assets)}"
+          assets += [stream / "dushanbe_istiklol.ytyp", stream / "dushanbe_istiklol.ymap"]
+          for path in assets:
+              assert path.is_file(), f"Missing native resource: {path}"
+              data = path.read_bytes()
+              assert data[:4] == b"RSC7", f"Missing RSC7 magic: {path}"
+              assert len(data) >= 128, f"Native resource too small: {path}"
+          print(f"Validated {len(assets)} RSC7 binary resources through CodeWalker readback.")
+          print("The package remains a local-coordinate preview, not a playable map.")
+          PY
+
+      - name: Upload native GEN8 resource preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dushanbe-Istiklol-GTA-V-Legacy-Native-Preview
+          path: |
+            artifacts/native-gen8/**
+            artifacts/Dushanbe_Istiklol_preview.png
+            artifacts/city-export/city_slice_export_manifest.json
           if-no-files-found: warn
           retention-days: 14
