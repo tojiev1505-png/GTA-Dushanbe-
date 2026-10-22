@@ -8,13 +8,13 @@ The repository contains planning data, validation tools, and a documented path t
 
 - Project foundation and offline JSON validation are in place.
 - **Local tool launch, 3D world loading, and camera navigation verified on 2026-10-22.**
-- **AI placement is blocked with Anthropic cloud:** on 2026-10-22, Claude Code repeatedly timed out connecting to `api.anthropic.com`. Since the user is in Russia, the practical next experiment is a local Ollama model through Ollama's Anthropic-compatible API. This alternative has been documented but not yet tested with GTA V Map Agent.
+- **First local AI prop placement confirmed by the user on 2026-10-22:** GTA V Map Agent, configured with Ollama and `qwen3:4b`, searched existing GTA V props and placed a streetlight. The local inference/placement path is working for this simple test.
 - **In-game export/testing has not been performed.**
-- The exact target installation—GTA V Legacy or Enhanced—must be recorded before making edition-specific compatibility claims.
+- The exact target installation—GTA V Legacy or Enhanced—and the desired single-player or multiplayer target must be recorded before making compatibility claims.
 
 ## Local AI experiment
 
-The proposed no-cloud experiment uses [Ollama for Windows](https://ollama.com/download/windows) with the `qwen3:4b` model and Ollama's Anthropic-compatible Messages API. Proposed launch settings for the same PowerShell session are:
+The working local-model setup uses [Ollama for Windows](https://ollama.com/download/windows) and the `qwen3:4b` model, with Ollama's Anthropic-compatible Messages API. The editor was launched with these environment variables in the same PowerShell session:
 
 ```powershell
 $env:ANTHROPIC_BASE_URL = "http://localhost:11434"
@@ -23,11 +23,11 @@ $env:ANTHROPIC_API_KEY = ""
 $env:MAP_EDITOR_MODEL = "qwen3:4b"
 ```
 
-This route would run inference locally rather than connecting to Anthropic. Compatibility with this app's full agent loop remains unverified; validate first with a simple `claude --model qwen3:4b` test after pulling the model, then run the editor in the same shell if successful.
+Anthropic cloud sign-in is not working from the user's location, but local Ollama inference allowed the agent to complete a simple prop placement. More complex scenes, repeated tool use, independent review, and exports remain to be tested.
 
 ## Initial prototype scope
 
-The first goal is a small, reviewable Dushanbe-inspired scene rather than a claim to recreate the entire city. GTA V Map Agent can arrange existing GTA V props and export placements. It does not create new terrain, custom building models, interiors, or complete road geometry; those require a separate 3D authoring and game-format workflow.
+The next milestone is a small, reviewable Dushanbe-inspired public square using existing GTA V props rather than a claim to recreate the entire city. GTA V Map Agent can arrange existing props and export placements. It does not create new terrain, custom building models, interiors, or complete road geometry; those require a separate 3D authoring and game-format workflow.
 
 The initial central-block data is an illustrative planning model only. Its coordinates use a fictional local Cartesian grid in metres. They are **not** surveyed Dushanbe coordinates or GTA V world coordinates, and cannot be loaded directly into the game as a map.
 
@@ -64,4 +64,4 @@ Use only original assets or resources whose licenses permit the intended use. Do
 
 ## External tool references
 
-- [GTA V Map Agent](https://github.com/cngil/gtav-mapagent) — open-source prop-placement editor using CodeWalker and Claude Code. Its bundled CodeWalker has its own licensing notices; review them before redistributing bundled components.
+- [GTA V Map Agent](https://github.com/cngil/gtav-mapagent) — open-source prop-placement editor using CodeWalker and an AI agent. Its bundled CodeWalker has its own licensing notices; review them before redistributing bundled components.
