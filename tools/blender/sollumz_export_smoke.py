@@ -16,18 +16,13 @@ from pathlib import Path
 
 import bpy
 
-OUTPUT_DIR = Path(
-    os.environ.get("DUSHANBE_SOLLUMZ_OUTPUT", os.environ.get("DUSHANBE_SOLLUMZ_OUTPUT", "artifacts/sollumz-smoke"))
-).resolve()
+OUTPUT_DIR = Path(os.environ.get("DUSHANBE_SOLLUMZ_OUTPUT", "artifacts/sollumz-smoke")).resolve()
 ADDON_MODULE = os.environ.get("DUSHANBE_SOLLUMZ_ADDON_MODULE", "Sollumz")
 
 
 def clean_scene():
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
-    for collection in list(bpy.data.collections):
-        if collection.name != bpy.context.scene.collection.name and collection.users == 0:
-            bpy.data.collections.remove(collection)
 
 
 def enable_sollumz():
@@ -108,8 +103,8 @@ def run_export(drawable):
                 "Expected a drawable CWXML file (*.ydr.xml), but export did not create one. "
                 f"Files: {listing}"
             )
-    tree = ET.parse(expected)
-    root = tree.getroot()
+
+    root = ET.parse(expected).getroot()
     geometry_count = len(root.findall("./DrawableModelsHigh/Item/Geometries/Item"))
     shader_count = len(root.findall("./ShaderGroup/Shaders/Item"))
     if geometry_count < 1:
