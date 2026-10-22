@@ -1,62 +1,69 @@
-# Automatic Blender, Sollumz and CodeWalker build on GitHub
+# Automatic Blender, OpenStreetMap, Sollumz and CodeWalker build
 
-The GitHub Actions workflow **Build Blender greybox artifact** builds the city slice in
-headless Blender, runs the official Sollumz exporter, validates the CodeWalker XML, and
-then runs a separate Windows job against a pinned CodeWalker Core revision to create and
-read back GTA V Legacy / GEN8 binary resources.
+The GitHub Actions pipeline fetches a small OpenStreetMap extract around Istiklol Monument,
+rebuilds the surrounding city geometry from mapped features, exports through Sollumz, and
+converts the result with CodeWalker Core to GTA V Legacy / GEN8 binary resources.
 
-## How to watch and download results
+## How to download the results
 
-1. Open the repository on GitHub and choose **Actions**.
-2. Open **Build Blender greybox artifact**.
-3. Select the latest run for the current pull request.
-4. Open the run to inspect each step and its logs.
-5. A successful workflow produces two downloadable artifacts:
-   - **Dushanbe-Istiklol-CitySlice-CWXML** — editable Blender scene, render, manifest, DDS textures, and readable CWXML source assets.
-   - **Dushanbe-Istiklol-GTA-V-Legacy-Native-Preview** — CodeWalker-converted RSC7 resource files and a manifest after CodeWalker successfully reads each binary asset back.
+1. Open the repository on GitHub and select Actions.
+2. Open the latest successful Build Blender greybox artifact run for this pull request.
+3. Download Dushanbe-Istiklol-CitySlice-CWXML for the Blender source scene, preview, OSM extract, attribution, DDS textures and readable CWXML.
+4. Download Dushanbe-Istiklol-GTA-V-Legacy-Native-Preview for CodeWalker-converted RSC7 resources and the native conversion manifest.
 
-The native preview package is retained by GitHub Actions for 14 days. No game files are installed
-on your PC automatically, and the PR stays unmerged until reviewed.
+The native preview package includes seven YDR files plus one YTYP and one YMAP (nine resources).
+The OSM source extract is packaged with the build artifacts and attributed to OpenStreetMap contributors.
+Artifacts are retained for 14 days. No game files are installed on your PC automatically, and the
+pull request stays unmerged until reviewed.
 
-## What the pipeline checks
+## What the pipeline builds
 
-**Blender/Sollumz stage:**
-- Creates the schematic city slice and validates the scene object/collection counts.
-- Renders a preview.
-- Installs official Sollumz 2.9.0 in the temporary runner.
-- Exports one small original test Drawable as a smoke test.
-- Exports nine main scene collections to YDR CWXML, plus one YTYP with nine archetypes and one YMAP with nine entities.
-- Validates that generated DDS swatches use actual DXT1 blocks matching the material declaration.
+**OpenStreetMap + Blender:**
+- Downloads an approximately 2 km district centered on the Istiklol Monument using Overpass.
+- Uses the source road centerlines and generates metric road ribbons/sidewalks.
+- Uses mapped building outlines and tagged heights/floor counts where available; makes facade walls and procedural window rows.
+- Imports mapped plaza, green, water and tree features when available.
+- Keeps the independently authored central landmark blockout visible as a temporary placeholder.
+- Writes an editable .blend scene, a rendered overview and JSON manifests.
 
-**CodeWalker binary stage:**
-- Checks out pinned CodeWalker Core source at commit 485d56bec00262ed7fa472261cce7bbc6202b96e.
-- Converts the nine YDR XML files and the YTYP/YMAP XML through CodeWalker.
-- Requires each resulting file to carry the RSC7 resource header.
-- Loads each binary YDR, YTYP and YMAP back through CodeWalker and checks the drawable, archetype and entity counts.
-- Saves files under native-gen8/stream/ inside the binary preview artifact.
+**Sollumz:**
+- Installs official Sollumz 2.9.0.
+- Runs a separate export smoke test on one original Drawable.
+- Exports seven scene groups as YDR CWXML, plus a YTYP and YMAP.
+- Validates the XML structures and DXT1 texture payloads.
 
-A successful conversion/readback means CodeWalker produced plausible native-format GEN8 resources
-that it can read again. It does **not** mean the map is ready to play or correctly positioned in
-the game world.
+**CodeWalker Core:**
+- Checks out pinned CodeWalker source at commit 485d56bec00262ed7fa472261cce7bbc6202b96e.
+- Converts the seven YDR XML files and the YTYP/YMAP through CodeWalker.
+- Requires RSC7 headers and loads every generated binary resource back through CodeWalker.
+- Uploads a package that includes seven YDRs, one YTYP and one YMAP.
 
-## Known limitations
+## Accuracy: what is real and what is not yet exact
 
-All scene dimensions are schematic local metre-sized coordinates, not surveyed Dushanbe data
-and not GTA V world coordinates. The map positions are intentionally local; they have not been
-transformed to an identified coordinate within GTA V's world.
+The street layout and building footprints now come from OpenStreetMap and are positioned in a
+local metric frame with origin at 38.59124, 68.78162. This removes the arbitrary hand-positioned
+road/building layout and gives the district a real spatial base.
 
-The monument and surrounding buildings remain blockout geometry. Cars, lamps, traffic signals,
-windows and furnishings are static placeholders, not functioning traffic or lighting systems.
-DDS swatches are flat-colour placeholders, not final art textures.
+This is still **not a photogrammetry scan or one-to-one facade reconstruction**. OSM has incomplete
+height and facade attributes; missing building heights use estimates, and windows are procedural.
+Some mapped building footprints may not include detailed roof forms. The Istiklol monument itself
+remains a schematic placeholder because a reusable, openly licensed model of the exact current
+monument was not found in this pass. Public model links and license notes are in
+docs/REAL_WORLD_3D_ASSETS.md.
 
-Collision YBNs, a proper LOD/SLOD hierarchy, streaming boundary review, CodeWalker viewport
-inspection, a target installation/package layout, and an in-game test are still outstanding.
-Only GTA V Legacy / GEN8 is targeted in this pipeline; GTA V Enhanced / GEN9 has not been tested.
-No Rockstar game files or extracted proprietary assets are committed or included.
+A successful build means CodeWalker can convert the assets and read them back. It does not mean
+the map is ready to play or correctly placed in the GTA V world. These are still outstanding:
+GTA V world-space transform, YBN collision assets, LOD/SLOD hierarchy, streaming review, target
+installation package layout, in-game testing and validation of GTA V Legacy. Enhanced / GEN9 is
+not tested. No proprietary Rockstar assets are included.
 
-## Generated files
+## Coordinate and licensing notes
 
-Python and C# source, workflow definitions and documentation are version-controlled. Generated
-.blend, PNG, JSON manifests, DDS textures, CWXML files and native binary assets are stored as
-temporary GitHub Actions artifacts rather than committed to Git. Re-run the workflow to produce
-a fresh artifact after its 14-day retention period expires.
+The OSM extract uses bounds 38.58200, 68.77100 to 38.60050, 68.79250, anchored at 38.59124,
+68.78162 for local coordinates. It includes data attribution and the ODbL 1.0 notice in
+assets/osm/README.md; the full Overpass response is included under artifacts/osm in the build
+artifact. See https://www.openstreetmap.org/copyright.
+
+The output is a local-coordinate preview, not yet mapped to a verified GTA V world location.
+OSM data is updated when a new workflow run fetches it. Generated scene/build outputs are
+stored as Actions artifacts rather than committed as binary files to Git.
