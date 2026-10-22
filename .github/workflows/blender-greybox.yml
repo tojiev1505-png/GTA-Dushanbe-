@@ -1,0 +1,299 @@
+name: Build Blender greybox artifact
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tools/blender/**"
+      - "tools/codewalker/**"
+      - ".github/workflows/blender-greybox.yml"
+  pull_request:
+    paths:
+      - "tools/blender/**"
+      - "tools/codewalker/**"
+      - ".github/workflows/blender-greybox.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: blender-greybox-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-greybox:
+    name: Build Blender scene and export city slice through Sollumz
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Blender, headless rendering libraries and Sollumz dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes blender libegl1 libgl1 libgl1-mesa-dri libegl-mesa0 curl unzip python3-numpy
+
+      - name: Check Python syntax
+        run: |
+          python3 -m py_compile tools/osm/fetch_dushanbe_slice.py tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py tools/blender/import_osm_city_slice.py tools/blender/build_istiklol_monument.py tools/blender/sollumz_export_smoke.py tools/blender/export_city_slice.py
+
+      - name: Show Blender version
+        run: blender --version
+
+      - name: Fetch attributed OSM geometry around Istiklol Monument
+        run: |
+          mkdir -p artifacts/osm
+          python3 tools/osm/fetch_dushanbe_slice.py --output artifacts/osm/istiklol_slice.json
+          cp assets/osm/README.md artifacts/osm/README.md
+
+      - name: Build OSM-backed city slice scene, preview and manifest
+        env:
+          DUSHANBE_OSM_JSON: ${{ github.workspace }}/artifacts/osm/istiklol_slice.json
+          DUSHANBE_BUILD_OUTPUT: ${{ github.workspace }}/artifacts
+        run: |
+          blender --background --factory-startup --python tools/blender/build_greybox_artifact.py
+
+      - name: Validate city slice build outputs
+        run: |
+          test -s artifacts/Dushanbe_Istiklol_Greybox.blend
+          test -s artifacts/Dushanbe_Istiklol_preview.png
+          test -s artifacts/Dushanbe_Istiklol_monument_closeup.png
+          test -s artifacts/greybox_manifest.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("artifacts/greybox_manifest.json").read_text(encoding="utf-8"))
+          assert manifest["status"] == "osm_geospatial_city_slice_built", manifest
+          assert manifest["game_ready"] is False, manifest
+          assert manifest["mesh_objects"] >= 250, manifest
+          assert manifest["osm_data"]["imported"] is True, manifest
+          assert manifest["osm_data"]["building_count"] >= 50, manifest
+          assert manifest["osm_data"]["road_way_count"] >= 40, manifest
+          assert manifest["monument"]["target_overall_height_m"] == 121.0, manifest
+          assert manifest["monument"]["gate_count"] == 7, manifest
+          assert manifest["osm_data"]["procedural_facade_window_count"] >= 100, manifest
+          assert manifest["monument"]["model_type"] == "original_parametric_reference_based", manifest
+          assert manifest["monument"]["target_overall_height_m"] == 121.0, manifest
+          assert manifest["monument"]["lower_architectural_section_m"] == 30.0, manifest
+          assert manifest["monument"]["gate_count"] == 7, manifest
+          assert manifest["monument"]["mesh_objects"] >= 4, manifest
+          print(f"Validated {manifest['mesh_objects']} Blender meshes, {manifest['osm_data']['building_count']} OSM buildings, and {manifest['osm_data']['road_way_count']} road ways.")
+          PY
+
+      - name: Download and install official Sollumz 2.9.0
+        run: |
+          curl --fail --location --retry 3 --retry-all-errors \
+            "https://github.com/Sollumz/Sollumz/releases/download/v2.9.0/Sollumz.zip" \
+            --output "$RUNNER_TEMP/Sollumz-2.9.0.zip"
+          mkdir -p "$RUNNER_TEMP/sollumz-unpack"
+          unzip -q "$RUNNER_TEMP/Sollumz-2.9.0.zip" -d "$RUNNER_TEMP/sollumz-unpack"
+          ADDON_ROOT="$(dirname "$(find "$RUNNER_TEMP/sollumz-unpack" -maxdepth 5 -type f -name dependencies.py -print -quit)")"
+          test -f "$ADDON_ROOT/__init__.py"
+          test -f "$ADDON_ROOT/dependencies.py"
+          ADDON_DIR="$HOME/.config/blender/4.0/scripts/addons/Sollumz"
+          mkdir -p "$ADDON_DIR"
+          cp -a "$ADDON_ROOT"/. "$ADDON_DIR"/
+          echo "Installed Sollumz files from: $ADDON_ROOT"
+          test -f "$ADDON_DIR/__init__.py"
+
+      - name: Prove Sollumz can export one original drawable to CWXML
+        env:
+          DUSHANBE_SOLLUMZ_OUTPUT: ${{ github.workspace }}/artifacts/sollumz-smoke
+        run: |
+          mkdir -p "$DUSHANBE_SOLLUMZ_OUTPUT"
+          blender --background --factory-startup --python tools/blender/sollumz_export_smoke.py
+
+      - name: Validate Sollumz CWXML proof
+        run: |
+          test -s artifacts/sollumz-smoke/sollumz_export_smoke_manifest.json
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          out = Path("artifacts/sollumz-smoke")
+          manifest = json.loads((out / "sollumz_export_smoke_manifest.json").read_text(encoding="utf-8"))
+          assert manifest["status"] == "sollumz_cwxml_drawable_export_smoke_test_passed", manifest
+          assert manifest["game_ready"] is False, manifest
+          xml_file = out / manifest["output_file"]
+          assert xml_file.is_file(), f"Missing exported XML: {xml_file}"
+          root = ET.parse(xml_file).getroot()
+          assert root.tag, "Missing XML root"
+          assert manifest["drawable_geometry_count"] >= 1, manifest
+          assert manifest["shader_count"] >= 1, manifest
+          print(f"Validated Sollumz XML drawable: {xml_file.name}")
+          print("This is a CWXML pipeline proof only, not an in-game map.")
+          PY
+
+      - name: Export city slice drawables and YTYP/YMAP in CWXML
+        env:
+          DUSHANBE_INPUT_BLEND: ${{ github.workspace }}/artifacts/Dushanbe_Istiklol_Greybox.blend
+          DUSHANBE_CITY_EXPORT_OUTPUT: ${{ github.workspace }}/artifacts/city-export
+        run: |
+          mkdir -p "$DUSHANBE_CITY_EXPORT_OUTPUT"
+          blender --background --factory-startup --python tools/blender/export_city_slice.py
+
+      - name: Validate city slice CWXML package
+        run: |
+          test -s artifacts/city-export/Dushanbe_Istiklol_Sollumz_Prepared.blend
+          test -s artifacts/city-export/city_slice_export_manifest.json
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          out = Path("artifacts/city-export")
+          manifest = json.loads((out / "city_slice_export_manifest.json").read_text(encoding="utf-8"))
+          assert manifest["status"] == "city_slice_cwxml_export_pipeline_passed", manifest
+          assert manifest["game_ready"] is False, manifest
+          assert manifest["drawable_count"] == 7, manifest
+          assert len(manifest["ydr_exports"]) == 7, manifest
+          assert manifest["ytyp_export"]["archetype_count"] >= 7, manifest
+          assert manifest["ymap_export"]["entity_count"] >= 7, manifest
+          assert manifest["osm_data"]["building_count"] >= 50, manifest
+          assert manifest["osm_data"]["road_way_count"] >= 40, manifest
+          for record in manifest["ydr_exports"]:
+              path = out / record["file"]
+              assert path.is_file(), f"Missing YDR CWXML: {path}"
+              assert ET.parse(path).getroot().tag == "Drawable", f"Invalid YDR CWXML: {path}"
+          assert ET.parse(out / manifest["ytyp_export"]["file"]).getroot().tag == "CMapTypes", manifest
+          assert ET.parse(out / manifest["ymap_export"]["file"]).getroot().tag == "CMapData", manifest
+          print(f"Validated {len(manifest['ydr_exports'])} OSM-backed YDRs, one YTYP with {manifest['ytyp_export']['archetype_count']} archetypes,")
+          print(f"and one YMAP with {manifest['ymap_export']['entity_count']} entities.")
+          print("CWXML structure checks passed; native conversion is a separate job.")
+          PY
+
+      - name: Validate DDS payloads match Sollumz DXT1 declarations
+        run: |
+          python3 - <<'PY'
+          import math
+          import struct
+          from pathlib import Path
+
+          root = Path("artifacts/city-export")
+          dds_files = sorted(root.rglob("*.dds"))
+          assert dds_files, "No original DDS swatches were generated"
+          unique = set()
+          for path in dds_files:
+              data = path.read_bytes()
+              assert data[:4] == b"DDS ", f"Invalid DDS magic: {path}"
+              assert len(data) >= 136, f"DDS too small: {path}"
+              assert data[84:88] == b"DXT1", f"Expected DXT1 FourCC in {path}, got {data[84:88]!r}"
+              height, width = struct.unpack_from("<II", data, 12)
+              expected = 128 + math.ceil(width / 4) * math.ceil(height / 4) * 8
+              assert len(data) == expected, f"DXT1 payload size mismatch for {path}: {len(data)} != {expected}"
+              unique.add((width, height, data[84:88]))
+          print(f"Validated {len(dds_files)} DXT1 DDS files; formats: {sorted((w, h, f.decode()) for w, h, f in unique)}")
+          PY
+
+      - name: Upload reviewable scene and city export package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dushanbe-Istiklol-CitySlice-CWXML
+          path: |
+            artifacts/Dushanbe_Istiklol_Greybox.blend
+            artifacts/Dushanbe_Istiklol_preview.png
+            artifacts/Dushanbe_Istiklol_monument_closeup.png
+            artifacts/greybox_manifest.json
+            artifacts/osm/**
+            artifacts/sollumz-smoke/**
+            artifacts/city-export/**
+          if-no-files-found: warn
+          retention-days: 14
+
+  convert-native-gen8:
+    name: Convert and round-trip validate GEN8 binary resources with CodeWalker
+    needs: build-greybox
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out project source
+        uses: actions/checkout@v4
+
+      - name: Download the validated CWXML artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Dushanbe-Istiklol-CitySlice-CWXML
+          path: artifacts
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Fetch pinned CodeWalker Core source
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:RUNNER_TEMP "CodeWalker"
+          git clone --filter=blob:none --no-checkout https://github.com/dexyfex/CodeWalker.git $source
+          git -C $source checkout 485d56bec00262ed7fa472261cce7bbc6202b96e
+          if ($LASTEXITCODE -ne 0) { throw "Could not checkout the pinned CodeWalker commit." }
+          if (!(Test-Path (Join-Path $source "CodeWalker.Core\CodeWalker.Core.csproj"))) {
+            throw "Pinned CodeWalker Core project not found."
+          }
+
+      - name: Build the CodeWalker converter
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:RUNNER_TEMP "CodeWalker"
+          dotnet build tools/codewalker/CitySliceConverter.csproj --configuration Release "-p:CodeWalkerSourceDir=$source"
+          if ($LASTEXITCODE -ne 0) { throw "CodeWalker converter build failed." }
+
+      - name: Convert CWXML to native GEN8 resources and read them back
+        shell: pwsh
+        run: |
+          $input = Join-Path $env:GITHUB_WORKSPACE "artifacts\city-export"
+          $output = Join-Path $env:GITHUB_WORKSPACE "artifacts\native-gen8"
+          $converter = Join-Path $env:GITHUB_WORKSPACE "tools\codewalker\bin\Release\net8.0\CitySliceConverter.dll"
+          if (!(Test-Path $input)) { throw "CWXML folder missing: $input" }
+          dotnet $converter $input $output
+          if ($LASTEXITCODE -ne 0) { throw "CodeWalker native conversion or round-trip validation failed." }
+
+      - name: Validate binary resource package
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:GITHUB_WORKSPACE "artifacts\native-gen8"
+          $stream = Join-Path $root "stream"
+          $manifestPath = Join-Path $root "native_conversion_manifest.json"
+          if (!(Test-Path $manifestPath)) { throw "Native conversion manifest not found: $manifestPath" }
+          $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+
+          if ($manifest.status -ne "codewalker_gen8_binary_conversion_passed") { throw "Unexpected CodeWalker result status: $($manifest.status)" }
+          if ($manifest.game_ready -ne $false) { throw "Manifest must keep game_ready=false until in-game testing." }
+          if ($manifest.target_game_edition -ne "GTA V Legacy / GEN8") { throw "Unexpected edition target." }
+          if ($manifest.ydr_count -ne 7) { throw "Expected 7 YDRs, got $($manifest.ydr_count)" }
+          if ($manifest.ytyp_archetype_count -lt 7) { throw "YTYP archetype count too low." }
+          if ($manifest.ymap_entity_count -lt 7) { throw "YMAP entity count too low." }
+
+          $assets = @(Get-ChildItem -LiteralPath $stream -Filter "*.ydr" -File)
+          if ($assets.Count -ne 7) { throw "Expected 7 native YDRs, got $($assets.Count)" }
+          $assets += Get-Item -LiteralPath (Join-Path $stream "dushanbe_istiklol.ytyp")
+          $assets += Get-Item -LiteralPath (Join-Path $stream "dushanbe_istiklol.ymap")
+          foreach ($asset in $assets) {
+            if (!(Test-Path -LiteralPath $asset.FullName)) { throw "Missing native resource: $($asset.FullName)" }
+            $bytes = [System.IO.File]::ReadAllBytes($asset.FullName)
+            if ($bytes.Length -lt 128) { throw "Native resource is too small: $($asset.Name)" }
+            $magic = [System.Text.Encoding]::ASCII.GetString($bytes, 0, 4)
+            if ($magic -ne "RSC7") { throw "Missing RSC7 header in $($asset.Name): $magic" }
+          }
+          Write-Host "Validated $($assets.Count) RSC7 binary resources through CodeWalker readback."
+          Write-Host "The package remains a local-coordinate preview, not a playable map."
+
+      - name: Upload native GEN8 resource preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dushanbe-Istiklol-GTA-V-Legacy-Native-Preview
+          path: |
+            artifacts/native-gen8/**
+            artifacts/Dushanbe_Istiklol_preview.png
+            artifacts/Dushanbe_Istiklol_monument_closeup.png
+            artifacts/city-export/city_slice_export_manifest.json
+            artifacts/osm/istiklol_slice.json
+          if-no-files-found: warn
+          retention-days: 14
