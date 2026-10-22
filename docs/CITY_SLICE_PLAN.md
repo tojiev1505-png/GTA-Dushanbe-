@@ -48,6 +48,20 @@ Add new sources only with URL, access date, intended use, confidence, and licens
 - Make a tiny original road/platform segment and simple building volume; export, inspect in CodeWalker, then perform a local in-game test.
 - Record export logs, collision results and in-game evidence before expanding the scene.
 
+## First editable blockout generator
+
+A Blender Python script has been added at `tools/blender/create_istiklol_greybox.py`. It creates a schematic city slice with a ground base, roads/markings, plaza, a simplified landmark massing, surrounding building volumes, tree proxies and simple vehicle proxies. This is an editable visual blockout, not a map export.
+
+Run it from Blender 4.0+:
+
+1. Install/open Blender and select the **Scripting** workspace.
+2. Open `tools/blender/create_istiklol_greybox.py` in a Text Editor area.
+3. Click **Run Script**.
+4. Save a copy of the generated `.blend` scene outside the GTA V Map Agent folder.
+5. Review from top and street-level views; take screenshots and note changes before we detail geometry.
+
+All dimensions are illustrative assumptions chosen to produce a coherent first viewport. They are not measured from official plans or GIS data and must be calibrated against references. Do not export this blockout as a playable mod.
+
 ## Suggested Blender scene organization
 
 Use collections or equivalent groups with stable names:
