@@ -1,37 +1,45 @@
-# Tooling research notes
+# GTA V tooling research notes
 
 ## Purpose
 
-This document records a cautious workflow for selecting tools for an original GTA: San Andreas map modification. The exact toolchain is **not selected yet**. Do not infer compatibility from the name of a tool alone.
+The project is now targeting a real, expandable Dushanbe-inspired city slice. Prop-placement tooling is useful for dressing, but cannot replace the need for custom road, plaza, terrain, and building geometry.
 
-## Candidate roles to research
+## Tool roles
 
-1. **3D authoring:** Blender or another editor capable of producing original models and geometry.
-2. **Game-format inspection/export:** a maintained GTA: San Andreas modding tool that explicitly supports the intended PC game edition and the file formats in use.
-3. **Texture authoring:** an image editor that exports formats supported by the verified pipeline.
-4. **Data and validation:** Python 3.10+ and the standard library for repeatable checks of project JSON.
-5. **Source control/CI:** Git and GitHub Actions for text assets, scripts, documentation, and license-safe original sources.
+### GTA V Map Agent + CodeWalker
 
-## Verification checklist before choosing a game-specific tool
+- Upstream: https://github.com/cngil/gtav-mapagent
+- Verified locally on 2026-10-22: editor launches, CodeWalker world and camera work, and a local Ollama `qwen3:4b` agent placed one existing streetlight prop.
+- Use for inspection, existing-prop placement, collision/ground checks, and supported map exports.
+- Do not treat it as a custom-city generator: it does not create original terrain, building models, or a complete replacement road network.
+- Complex multi-object placement, map export, and in-game behavior remain to be verified.
 
-- Locate official documentation or a maintained upstream repository.
-- Verify supported game edition, architecture, input/output formats, and known limitations.
-- Read the tool's license and any bundled dependency licenses.
-- Confirm the tool does not require redistribution of Rockstar binaries or extracted content.
-- Prefer reproducible steps and small tests; scan downloads with the user's normal security tools.
-- Record exact tool version, source URL, retrieval date, and test result after hands-on verification.
+### Blender + Sollumz — custom geometry
 
-## Suggested first experiment
+- Official upstream: https://github.com/Sollumz/Sollumz
+- Sollumz is an open-source Blender add-on for GTA V assets and map work. The upstream documentation lists formats including YDR, YBN, YTYP, and YMAP support; the project announced a major YMAP workflow rework in August 2026.
+- Use Blender for original building masses/facades, plaza surfaces, roads, sidewalks, terrain and unique landmark geometry.
+- Version and edition compatibility must be verified before committing to an export format. Record Blender version, Sollumz commit/release, GTA V edition and CodeWalker version.
+- Follow upstream documentation and notices; do not redistribute game assets.
 
-1. Create a tiny original road segment and one simple box building in a 3D editor.
-2. Confirm scale units and transforms.
-3. Export only after the game-specific format and tool are verified.
-4. Inspect the exported result with the selected tool.
-5. Do not describe the result as game-tested until it has been tested in the intended game environment.
+## Key design constraints
 
-## Status
+- Keep source geometry, planning data, GTA V placement coordinates, exports and in-game evidence separate.
+- Do not paste fictional local coordinates from `map-data/blocks/center_prototype.json` into GTA V world coordinates.
+- A YMAP containing static objects is not, by itself, a fully functioning traffic system. Static parked vehicles may be feasible in a map; live traffic and drivable vehicles can require game scripts or separate systems.
+- Large custom buildings need scale, materials/textures, collision, and suitable LODs. An imported mesh that looks right in Blender is not finished until it exports and is verified in game.
+- Never place or commit Rockstar archives, extracted proprietary game assets, credentials, or unauthorized third-party mod assets in this repository.
 
-- No game-specific exporter has been approved by this document.
-- No game installation is assumed or required for the current data prototype.
-- The current prototype is planning data only, not a game-ready asset.
-- All candidate tool choices remain subject to current upstream documentation and license review.
+## First slice proposal
+
+The proposed slice is Istiklol Square and a short adjoining boulevard, with landmark massing, roads, sidewalks, landscaping, parked-vehicle placeholders, and several surrounding building volumes. A first editable Blender script is now at `tools/blender/create_istiklol_greybox.py`. It creates schematic geometry only; it has not yet been run in Blender, exported through Sollumz, or tested in game. Review it against sourced reference dimensions before treating any coordinates as meaningful.
+
+Reference-source register and acceptance criteria are in `docs/CITY_SLICE_PLAN.md`.
+
+## Current status
+
+- Viewer and camera: verified locally on 2026-10-22.
+- Local Qwen model and one prop placement: confirmed by the user on 2026-10-22.
+- Blender/Sollumz installed and tested in this project: not yet confirmed.
+- Custom geometry export, map export, and in-game behavior: not yet tested.
+- Target GTA V edition and final deployment platform: not decided.
