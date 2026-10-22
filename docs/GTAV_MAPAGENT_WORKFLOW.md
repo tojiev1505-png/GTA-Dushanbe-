@@ -6,14 +6,17 @@ This guide is for a small throwaway prop-placement scene. It does not create a f
 
 1. Start the editor from `gtav-mapagent/editor` with `npm start`.
 2. Confirm that the embedded 3D world is visible.
-3. Click inside the 3D viewport and test WASD and mouse movement. Use the mouse wheel to adjust movement speed. This step has been confirmed by the user on 2026-10-22.
+3. Click inside the 3D viewport and test WASD and mouse movement. Use the mouse wheel to adjust movement speed. This step was confirmed by the user on 2026-10-22.
 4. Record the GTA V game folder used by CodeWalker and whether it is Legacy or Enhanced. Do not assume an export is compatible with both editions.
 
-## 2. Test whether the scene agent can respond
+## 2. Resolve the scene-agent connection blocker
 
-The editor and camera are working, but the chat agent has not yet been verified because Claude Code previously could not reach Anthropic services. Try one small request in the editor. If it succeeds, continue below. If it reports a sign-in or connectivity error, stop and send the exact error text; do not keep retrying or reinstalling the working viewer.
+The editor and camera work. However, on 2026-10-22, Claude Code again reported a 10-second timeout while connecting to `api.anthropic.com`. The editor then reports `Not logged in · Please run /login`. The CLI is unable to reach the service to complete login, so repeating `/login` alone will not solve this.
 
-Suggested first prompt:
+- If the user is physically in an Anthropic-supported region, test another ordinary network such as a phone hotspot and check local firewall or proxy configuration.
+- If the current physical region is not supported, do not bypass regional availability restrictions. Use a model/provider available to the user and port the application integration; that is a code change, not a toggle in the existing app.
+
+Once the agent works, use this first test prompt:
 
 > At the current camera position, build a small Dushanbe-inspired public square using only existing GTA V props: place two benches facing each other, four streetlights around them, and three planters. Keep everything on the ground, avoid blocking roads or buildings, and inspect the placement from multiple angles. Do not create custom models.
 
