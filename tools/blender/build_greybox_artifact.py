@@ -17,6 +17,7 @@ from mathutils import Vector
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_SCRIPT = REPO_ROOT / "tools" / "blender" / "create_istiklol_greybox.py"
+DETAIL_SCRIPT = REPO_ROOT / "tools" / "blender" / "add_city_details.py"
 OUTPUT_DIR = Path(os.environ.get("DUSHANBE_BUILD_OUTPUT", REPO_ROOT / "artifacts")).resolve()
 ROOT_NAME = "Dushanbe_Istiklol_Greybox"
 REQUIRED_COLLECTIONS = (
@@ -27,6 +28,8 @@ REQUIRED_COLLECTIONS = (
     "04_Building_Masses",
     "05_Landscape",
     "06_Vehicle_Proxies",
+    "07_Facade_Detail",
+    "08_Street_Furniture",
 )
 
 
@@ -111,7 +114,7 @@ def validate_and_describe_scene():
         "scene": ROOT_NAME,
         "generated_utc": datetime.now(timezone.utc).isoformat(),
         "blender_version": bpy.app.version_string,
-        "status": "schematic_greybox_built",
+        "status": "schematic_greybox_built_with_detail_pass",
         "game_ready": False,
         "units": "metres (illustrative local design units only)",
         "coordinate_status": "not surveyed; not GTA V world coordinates",
@@ -132,6 +135,7 @@ def validate_and_describe_scene():
             "This build has not been tested in GTA V Legacy or GTA V Enhanced.",
             "Preview camera and light are for inspection only, not map assets.",
             "Vehicle shapes are non-functional visual placeholders, not drivable GTA vehicles.",
+            "Street lights, signals, benches, shopfronts and windows are schematic mesh details only.",
         ],
     }
 
@@ -141,8 +145,12 @@ def main():
         raise FileNotFoundError(f"Greybox source script was not found: {SOURCE_SCRIPT}")
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # The source script creates the original editable scene in this Blender process.
+    if not DETAIL_SCRIPT.is_file():
+        raise FileNotFoundError(f"City detail script was not found: {DETAIL_SCRIPT}")
+
+    # Generate the base scene, then add architectural/urban detail in a second pass.
     runpy.run_path(str(SOURCE_SCRIPT), run_name="__main__")
+    runpy.run_path(str(DETAIL_SCRIPT), run_name="__main__")
 
     scene = bpy.context.scene
     scene.unit_settings.system = "METRIC"
