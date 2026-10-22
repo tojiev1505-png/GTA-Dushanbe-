@@ -27,10 +27,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Blender
+      - name: Install Blender and headless rendering libraries
         run: |
           sudo apt-get update
-          sudo apt-get install --yes blender
+          sudo apt-get install --yes blender libegl1 libgl1 libgl1-mesa-dri libegl-mesa0
 
       - name: Show Blender version
         run: blender --version
