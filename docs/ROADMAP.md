@@ -11,7 +11,7 @@ This roadmap separates planning, prop-scene experiments, custom asset creation, 
 - [x] Verify that the local GTA V Map Agent editor launches and CodeWalker renders the world.
 - [x] Verify camera navigation in the embedded 3D view.
 
-**Remaining:** AI prop placement and game export/testing are not verified. Claude Code previously could not connect to Anthropic; the next attempt will determine whether that blocker persists. The target GTA V edition (Legacy or Enhanced) also still needs to be recorded.
+**Remaining:** AI prop placement is blocked. Claude Code repeatedly timed out connecting to `api.anthropic.com` on 2026-10-22, so sign-in cannot complete. Diagnose ordinary network/firewall access if operating in an officially supported region; otherwise select and implement a supported alternative provider. Game export/testing is also pending, and the target GTA V edition (Legacy or Enhanced) must be recorded.
 
 ## Phase 1 — Define the first playable slice
 
@@ -26,8 +26,8 @@ This roadmap separates planning, prop-scene experiments, custom asset creation, 
 ## Phase 2 — Verify the GTA V toolchain
 
 - Confirm which game installation CodeWalker reads and whether it is Legacy or Enhanced.
-- Confirm camera navigation and the scene/project controls work. Camera navigation is now verified.
-- Resolve any current Claude Code connection issue or implement and test a supported alternative backend before relying on automated placement.
+- Camera and viewport controls have been verified.
+- Resolve the Claude API connectivity/login blocker or implement and test a supported alternative backend before relying on automated placement.
 - Create a disposable scene using only existing GTA V props.
 - Export a tiny scene and inspect the output files.
 
