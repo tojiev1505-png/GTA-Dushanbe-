@@ -22,9 +22,9 @@ permissions:
 
 jobs:
   build-greybox:
-    name: Build editable Blender scene and preview
+    name: Build editable Blender scene, preview and Sollumz export proof
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -32,22 +32,22 @@ jobs:
       - name: Install Blender and headless rendering libraries
         run: |
           sudo apt-get update
-          sudo apt-get install --yes blender libegl1 libgl1 libgl1-mesa-dri libegl-mesa0
+          sudo apt-get install --yes blender libegl1 libgl1 libgl1-mesa-dri libegl-mesa0 curl unzip
 
       - name: Check Python syntax
         run: |
-          python3 -m py_compile tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py
+          python3 -m py_compile tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py tools/blender/sollumz_export_smoke.py
 
       - name: Show Blender version
         run: blender --version
 
-      - name: Build scene, preview and manifest
+      - name: Build city slice scene, preview and manifest
         run: |
           mkdir -p artifacts
           export DUSHANBE_BUILD_OUTPUT="$GITHUB_WORKSPACE/artifacts"
           blender --background --factory-startup --python tools/blender/build_greybox_artifact.py
 
-      - name: Validate build outputs
+      - name: Validate city slice build outputs
         run: |
           test -s artifacts/Dushanbe_Istiklol_Greybox.blend
           test -s artifacts/Dushanbe_Istiklol_preview.png
@@ -63,14 +63,60 @@ jobs:
           print(f"Validated {manifest['mesh_objects']} meshes in Blender {manifest['blender_version']}")
           PY
 
-      - name: Upload reviewable build artifacts
+      - name: Download and install official Sollumz 2.9.0
+        run: |
+          curl --fail --location --retry 3 --retry-all-errors \
+            "https://github.com/Sollumz/Sollumz/releases/download/v2.9.0/Sollumz.zip" \
+            --output "$RUNNER_TEMP/Sollumz-2.9.0.zip"
+          mkdir -p "$RUNNER_TEMP/sollumz-unpack"
+          unzip -q "$RUNNER_TEMP/Sollumz-2.9.0.zip" -d "$RUNNER_TEMP/sollumz-unpack"
+          ADDON_ROOT="$(dirname "$(find "$RUNNER_TEMP/sollumz-unpack" -maxdepth 5 -type f -name dependencies.py -print -quit)")"
+          test -f "$ADDON_ROOT/__init__.py"
+          test -f "$ADDON_ROOT/dependencies.py"
+          ADDON_DIR="$HOME/.config/blender/4.0/scripts/addons/Sollumz"
+          mkdir -p "$ADDON_DIR"
+          cp -a "$ADDON_ROOT"/. "$ADDON_DIR"/
+          echo "Installed Sollumz files from: $ADDON_ROOT"
+          test -f "$ADDON_DIR/__init__.py"
+
+      - name: Prove Sollumz can export one original drawable to CWXML
+        env:
+          DUSHANBE_SOLLUMZ_OUTPUT: ${{ github.workspace }}/artifacts/sollumz-smoke
+        run: |
+          mkdir -p "$DUSHANBE_SOLLUMZ_OUTPUT"
+          blender --background --factory-startup --python tools/blender/sollumz_export_smoke.py
+
+      - name: Validate Sollumz CWXML proof
+        run: |
+          test -s artifacts/sollumz-smoke/sollumz_export_smoke_manifest.json
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          out = Path("artifacts/sollumz-smoke")
+          manifest = json.loads((out / "sollumz_export_smoke_manifest.json").read_text(encoding="utf-8"))
+          assert manifest["status"] == "sollumz_cwxml_drawable_export_smoke_test_passed", manifest
+          assert manifest["game_ready"] is False, manifest
+          xml_file = out / manifest["output_file"]
+          assert xml_file.is_file(), f"Missing exported XML: {xml_file}"
+          root = ET.parse(xml_file).getroot()
+          assert root.tag, "Missing XML root"
+          assert manifest["drawable_geometry_count"] >= 1, manifest
+          assert manifest["shader_count"] >= 1, manifest
+          print(f"Validated Sollumz XML drawable: {xml_file.name}")
+          print("This is a CWXML pipeline proof only, not an in-game map.")
+          PY
+
+      - name: Upload reviewable build and export-proof artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Dushanbe-Istiklol-Greybox
+          name: Dushanbe-Istiklol-Greybox-and-Sollumz-proof
           path: |
             artifacts/Dushanbe_Istiklol_Greybox.blend
             artifacts/Dushanbe_Istiklol_preview.png
             artifacts/greybox_manifest.json
+            artifacts/sollumz-smoke/**
           if-no-files-found: warn
           retention-days: 14
