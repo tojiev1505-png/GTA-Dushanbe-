@@ -1,53 +1,48 @@
 # First GTA V Map Agent experiment
 
-This guide is for a small throwaway prop-placement scene. It does not create a full Dushanbe city map.
+This guide is for an incremental prop-placement prototype. It does not create a full Dushanbe city map.
 
-## 1. Confirm the local viewer
+## 1. Verified local setup
 
-1. Start the editor from `gtav-mapagent/editor` with `npm start`.
-2. Confirm that the embedded 3D world is visible.
-3. Click inside the 3D viewport and test WASD and mouse movement. Use the mouse wheel to adjust movement speed. This step was confirmed by the user on 2026-10-22.
-4. Record the GTA V game folder used by CodeWalker and whether it is Legacy or Enhanced. Do not assume an export is compatible with both editions.
+- The editor launches and the embedded CodeWalker world loads.
+- The 3D camera is working.
+- On 2026-10-22, the user confirmed that GTA V Map Agent, configured with Ollama's local API and `qwen3:4b`, successfully placed one existing GTA V streetlight.
 
-## 2. Test a local model through Ollama
+The local-model environment used in the PowerShell session that launched the app:
 
-The editor and camera work, but Claude Code cannot reach `api.anthropic.com` from the user's current region. Do not keep retrying `/login`. A proposed alternative is Ollama's local Anthropic-compatible API. It routes model inference to the user's own computer rather than Anthropic cloud. This approach is documented by Ollama, but has not yet been tested end-to-end in this Map Agent build.
+```powershell
+$env:ANTHROPIC_BASE_URL = "http://localhost:11434"
+$env:ANTHROPIC_AUTH_TOKEN = "ollama"
+$env:ANTHROPIC_API_KEY = ""
+$env:MAP_EDITOR_MODEL = "qwen3:4b"
+cd "$HOME\gtav-mapagent\editor"
+npm start
+```
 
-1. Install Ollama for Windows from https://ollama.com/download/windows.
-2. Open PowerShell and run `ollama --version`, then `ollama pull qwen3:4b`. Ollama lists Qwen3 model variants with tool-calling support; the 4B package is approximately 2.5 GB and is a sensible initial test for a PC with a 6 GB GPU, though actual speed and memory use vary.
-3. In the same PowerShell window, configure this local API and model:
+For this local inference workflow, do not run `/login` as a fix for the Anthropic cloud timeout.
 
-   ```powershell
-   $env:ANTHROPIC_BASE_URL = "http://localhost:11434"
-   $env:ANTHROPIC_AUTH_TOKEN = "ollama"
-   $env:ANTHROPIC_API_KEY = ""
-   $env:MAP_EDITOR_MODEL = "qwen3:4b"
-   ```
+## 2. Next step: build the small square
 
-4. First test the bridge with `claude --model qwen3:4b`. Ask it to reply exactly `OK`. This is intended to confirm the local Messages API is answering without an Anthropic login.
-5. If the CLI test succeeds, exit it, close any existing Map Agent instance, and run `npm start` from the same PowerShell session. The editor inherits these environment variables and uses `MAP_EDITOR_MODEL` for the builder and (unless manually overridden) the critic.
-6. Try one small prop placement. If the editor reports an unsupported endpoint or another SDK error, capture the exact message; the compatibility API may not support every advanced Claude Agent SDK operation. Do not continue to assume the agent works until this succeeds.
+Open the same project in the editor and send the request below. It intentionally says four streetlights total so the existing test lamp can be kept, rather than duplicated blindly.
 
-Once the agent works, use this first test prompt:
+> Build a small Dushanbe-inspired public square around the existing test streetlight. Keep that streetlight and place only the additional objects needed to reach four streetlights total. Add two benches facing each other and three planters around a simple central pedestrian space. Use only existing GTA V props returned by search_props, place the props in a folder named "Dushanbe Test Square", keep them on the ground, and avoid blocking roads or building entrances. Before placing an object, search for its exact model name. After placement, check every prop for collisions and ground contact; fix any problems and inspect the result from top view and at least two sides. Do not create custom models and do not export the map yet. Report the prop IDs and any validation issues.
 
-> At the current camera position, build a small Dushanbe-inspired public square using only existing GTA V props: place two benches facing each other, four streetlights around them, and three planters. Keep everything on the ground, avoid blocking roads or buildings, and inspect the placement from multiple angles. Do not create custom models.
+If the agent starts asking what scene to build instead of acting, ask it to complete this explicit checklist using the map tools. Keep the existing test lamp unless it is in an unsafe position.
 
-This is a small test of placement and validation, not a real reconstruction of Dushanbe architecture.
+## 3. Inspect the result
 
-Do not share Claude credentials, session tokens, or API keys in the repository.
+- Verify the two benches visibly face each other.
+- Count four streetlights total, including the existing one.
+- Count three planters.
+- Review the returned validation reports and any tool errors.
+- Inspect the arrangement from multiple angles.
+- Undo the last request if it causes a bad or oversized scene.
 
-## 3. Inspect and export the test scene
+## 4. Export and game testing
 
-1. Review each placed item from several angles. Undo the request if the arrangement is wrong.
-2. Export a JSON copy first and inspect its prop names, positions, and rotations.
-3. Only then export the format intended for the eventual target platform.
+After the prop arrangement looks right, save the project and export a JSON copy for review. Then decide whether the target is GTA V Legacy or Enhanced and whether the intended use is single-player or multiplayer. Export to the relevant format only after that decision, then test it in the selected game edition/platform.
 
-## 4. Verify export and keep sources separate
-
-- Record the export format, game edition, tool versions, and test result.
-- Only test an exported map in the relevant game edition and intended platform.
-- Do not copy GTA V game files, extracted Rockstar assets, credentials, or third-party assets without redistribution permission into the Dushanbe-GTA repository.
-- Do not paste the illustrative coordinates from `map-data/blocks/center_prototype.json` directly into GTA V placement coordinates. The project has not established a transform between those coordinate systems.
+Do not copy GTA V game files, extracted Rockstar assets, credentials, or third-party assets without redistribution permission into the Dushanbe-GTA repository. The illustrative coordinates from `map-data/blocks/center_prototype.json` are fictional local coordinates; they are not GTA V placement coordinates and cannot be pasted into the editor without a documented transform.
 
 ## 5. Understand the limits
 
