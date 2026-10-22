@@ -38,15 +38,21 @@ jobs:
 
       - name: Check Python syntax
         run: |
-          python3 -m py_compile tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py tools/blender/sollumz_export_smoke.py tools/blender/export_city_slice.py
+          python3 -m py_compile tools/osm/fetch_dushanbe_slice.py tools/blender/create_istiklol_greybox.py tools/blender/add_city_details.py tools/blender/build_greybox_artifact.py tools/blender/import_osm_city_slice.py tools/blender/sollumz_export_smoke.py tools/blender/export_city_slice.py
 
       - name: Show Blender version
         run: blender --version
 
-      - name: Build city slice scene, preview and manifest
+      - name: Fetch attributed OSM geometry around Istiklol Monument
         run: |
-          mkdir -p artifacts
-          export DUSHANBE_BUILD_OUTPUT="$GITHUB_WORKSPACE/artifacts"
+          mkdir -p artifacts/osm
+          python3 tools/osm/fetch_dushanbe_slice.py --output artifacts/osm/istiklol_slice.json
+
+      - name: Build OSM-backed city slice scene, preview and manifest
+        env:
+          DUSHANBE_OSM_JSON: ${{ github.workspace }}/artifacts/osm/istiklol_slice.json
+          DUSHANBE_BUILD_OUTPUT: ${{ github.workspace }}/artifacts
+        run: |
           blender --background --factory-startup --python tools/blender/build_greybox_artifact.py
 
       - name: Validate city slice build outputs
@@ -59,10 +65,14 @@ jobs:
           from pathlib import Path
 
           manifest = json.loads(Path("artifacts/greybox_manifest.json").read_text(encoding="utf-8"))
-          assert manifest["status"] == "schematic_greybox_built_with_detail_pass", manifest
+          assert manifest["status"] == "osm_geospatial_city_slice_built", manifest
           assert manifest["game_ready"] is False, manifest
           assert manifest["mesh_objects"] >= 250, manifest
-          print(f"Validated {manifest['mesh_objects']} meshes in Blender {manifest['blender_version']}")
+          assert manifest["osm_data"]["imported"] is True, manifest
+          assert manifest["osm_data"]["building_count"] >= 50, manifest
+          assert manifest["osm_data"]["road_way_count"] >= 40, manifest
+          assert manifest["osm_data"]["procedural_facade_window_count"] >= 100, manifest
+          print(f"Validated {manifest['mesh_objects']} Blender meshes, {manifest['osm_data']['building_count']} OSM buildings, and {manifest['osm_data']['road_way_count']} road ways.")
           PY
 
       - name: Download and install official Sollumz 2.9.0
@@ -131,17 +141,19 @@ jobs:
           manifest = json.loads((out / "city_slice_export_manifest.json").read_text(encoding="utf-8"))
           assert manifest["status"] == "city_slice_cwxml_export_pipeline_passed", manifest
           assert manifest["game_ready"] is False, manifest
-          assert manifest["drawable_count"] == 9, manifest
-          assert len(manifest["ydr_exports"]) == 9, manifest
-          assert manifest["ytyp_export"]["archetype_count"] >= 9, manifest
-          assert manifest["ymap_export"]["entity_count"] >= 9, manifest
+          assert manifest["drawable_count"] == 7, manifest
+          assert len(manifest["ydr_exports"]) == 7, manifest
+          assert manifest["ytyp_export"]["archetype_count"] >= 7, manifest
+          assert manifest["ymap_export"]["entity_count"] >= 7, manifest
+          assert manifest["osm_data"]["building_count"] >= 50, manifest
+          assert manifest["osm_data"]["road_way_count"] >= 40, manifest
           for record in manifest["ydr_exports"]:
               path = out / record["file"]
               assert path.is_file(), f"Missing YDR CWXML: {path}"
               assert ET.parse(path).getroot().tag == "Drawable", f"Invalid YDR CWXML: {path}"
           assert ET.parse(out / manifest["ytyp_export"]["file"]).getroot().tag == "CMapTypes", manifest
           assert ET.parse(out / manifest["ymap_export"]["file"]).getroot().tag == "CMapData", manifest
-          print(f"Validated {len(manifest['ydr_exports'])} YDRs, one YTYP with {manifest['ytyp_export']['archetype_count']} archetypes,")
+          print(f"Validated {len(manifest['ydr_exports'])} OSM-backed YDRs, one YTYP with {manifest['ytyp_export']['archetype_count']} archetypes,")
           print(f"and one YMAP with {manifest['ymap_export']['entity_count']} entities.")
           print("CWXML structure checks passed; native conversion is a separate job.")
           PY
@@ -178,6 +190,9 @@ jobs:
             artifacts/Dushanbe_Istiklol_Greybox.blend
             artifacts/Dushanbe_Istiklol_preview.png
             artifacts/greybox_manifest.json
+            artifacts/osm/**
+            assets/osm/README.md
+            docs/REAL_WORLD_3D_ASSETS.md
             artifacts/sollumz-smoke/**
             artifacts/city-export/**
           if-no-files-found: warn
@@ -243,12 +258,12 @@ jobs:
           if ($manifest.status -ne "codewalker_gen8_binary_conversion_passed") { throw "Unexpected CodeWalker result status: $($manifest.status)" }
           if ($manifest.game_ready -ne $false) { throw "Manifest must keep game_ready=false until in-game testing." }
           if ($manifest.target_game_edition -ne "GTA V Legacy / GEN8") { throw "Unexpected edition target." }
-          if ($manifest.ydr_count -ne 9) { throw "Expected 9 YDRs, got $($manifest.ydr_count)" }
-          if ($manifest.ytyp_archetype_count -lt 9) { throw "YTYP archetype count too low." }
-          if ($manifest.ymap_entity_count -lt 9) { throw "YMAP entity count too low." }
+          if ($manifest.ydr_count -ne 7) { throw "Expected 7 YDRs, got $($manifest.ydr_count)" }
+          if ($manifest.ytyp_archetype_count -lt 7) { throw "YTYP archetype count too low." }
+          if ($manifest.ymap_entity_count -lt 7) { throw "YMAP entity count too low." }
 
           $assets = @(Get-ChildItem -LiteralPath $stream -Filter "*.ydr" -File)
-          if ($assets.Count -ne 9) { throw "Expected 9 native YDRs, got $($assets.Count)" }
+          if ($assets.Count -ne 7) { throw "Expected 7 native YDRs, got $($assets.Count)" }
           $assets += Get-Item -LiteralPath (Join-Path $stream "dushanbe_istiklol.ytyp")
           $assets += Get-Item -LiteralPath (Join-Path $stream "dushanbe_istiklol.ymap")
           foreach ($asset in $assets) {
@@ -270,5 +285,7 @@ jobs:
             artifacts/native-gen8/**
             artifacts/Dushanbe_Istiklol_preview.png
             artifacts/city-export/city_slice_export_manifest.json
+            artifacts/osm/istiklol_slice.json
+            assets/osm/README.md
           if-no-files-found: warn
           retention-days: 14
