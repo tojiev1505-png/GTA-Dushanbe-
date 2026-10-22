@@ -114,7 +114,8 @@ def get_or_make_sollumz_material(material, texture_dir: Path, created_textures: 
         relative_texture_path = Path("textures") / tex_path.name
         image.filepath = "//" + relative_texture_path.as_posix()
         node.image = image
-        node.sollumz_texture_name = tex_name
+        # Sollumz exposes this as a read-only property derived from image.filepath.
+        # The filename stem above therefore supplies the exported GTA texture name.
         node.texture_properties.embedded = True
         created_textures[material.name] = tex_name
     return material
