@@ -11,7 +11,7 @@ This roadmap separates planning, prop-scene experiments, custom asset creation, 
 - [x] Verify that the local GTA V Map Agent editor launches and CodeWalker renders the world.
 - [x] Verify camera navigation in the embedded 3D view.
 
-**Remaining:** AI prop placement is blocked. Claude Code repeatedly timed out connecting to `api.anthropic.com` on 2026-10-22, so sign-in cannot complete. Diagnose ordinary network/firewall access if operating in an officially supported region; otherwise select and implement a supported alternative provider. Game export/testing is also pending, and the target GTA V edition (Legacy or Enhanced) must be recorded.
+**Remaining:** AI prop placement is blocked with Anthropic cloud. Test a local Ollama model through its Anthropic-compatible API before planning a larger provider rewrite. This path is proposed, not verified. Game export/testing is also pending, and the target GTA V edition (Legacy or Enhanced) must be recorded.
 
 ## Phase 1 — Define the first playable slice
 
@@ -27,7 +27,7 @@ This roadmap separates planning, prop-scene experiments, custom asset creation, 
 
 - Confirm which game installation CodeWalker reads and whether it is Legacy or Enhanced.
 - Camera and viewport controls have been verified.
-- Resolve the Claude API connectivity/login blocker or implement and test a supported alternative backend before relying on automated placement.
+- Test the proposed Ollama local-model route (`qwen3:4b` through `ANTHROPIC_BASE_URL=http://localhost:11434`). If the Agent SDK's requests are incompatible, implement and test a supported alternative backend before relying on automated placement.
 - Create a disposable scene using only existing GTA V props.
 - Export a tiny scene and inspect the output files.
 
