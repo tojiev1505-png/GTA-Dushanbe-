@@ -16,7 +16,7 @@ This is moving beyond prop-placement tests toward a real city slice: custom road
 
 The proposed first slice is **Istiklol Square and a short adjoining boulevard segment**, with the monument/plaza, approach roads, sidewalks, landscaped beds, a small number of surrounding building masses, and appropriate parked-vehicle dressing. This is a bounded vertical slice that can grow into adjacent blocks after scale, collisions, exports, and performance are checked.
 
-See [the city-slice plan](docs/CITY_SLICE_PLAN.md) for scope, toolchain, reference sources, layers, and acceptance criteria.
+See [the city-slice plan](docs/CITY_SLICE_PLAN.md) for scope, toolchain, reference sources, layers, and acceptance criteria. The first editable Blender greybox generator is [here](tools/blender/create_istiklol_greybox.py). It is schematic and not a game-ready export.
 
 ## Toolchain roles
 
@@ -43,6 +43,7 @@ One simple prop placement was confirmed by the user. Larger scenes, critic/revie
 - `AGENTS.md` — contribution and asset rules.
 - `docs/ROADMAP.md` — phases and acceptance criteria.
 - `docs/CITY_SLICE_PLAN.md` — first serious city slice and work breakdown.
+- `tools/blender/create_istiklol_greybox.py` — Blender script that generates an editable schematic greybox with roads, plaza, landmark massing, building volumes, trees and vehicle placeholders.
 - `docs/ARIANE_TOOLING.md` — tool research and compatibility notes.
 - `docs/GTAV_MAPAGENT_WORKFLOW.md` — optional prop-placement/set-dressing workflow.
 - `map-data/blocks/center_prototype.json` — legacy illustrative planning example; not real survey or GTA coordinates.
