@@ -1,56 +1,59 @@
 # Project roadmap
 
-This roadmap separates early design and data validation from actual in-game implementation. A milestone is complete only when its acceptance criteria have been checked.
+This roadmap separates planning, prop-scene experiments, custom asset creation, and in-game testing. A milestone is complete only when its acceptance criteria have been checked.
 
-## Phase 0 — Project foundation (current)
+## Phase 0 — Project foundation
 
 - [x] Add contributor/agent rules and legal asset boundaries.
-- [x] Add a first illustrative central-block JSON prototype.
+- [x] Add an illustrative central-block JSON prototype.
 - [x] Add deterministic data validation and four unit tests.
 - [x] Add CI for validation and tests.
-- [ ] Review and approve the foundation pull request.
+- [x] Verify that the local GTA V Map Agent editor launches and CodeWalker renders the world.
 
-**Acceptance:** validator succeeds; all four unit tests pass; no third-party game assets are present.
+**Remaining:** AI placement is not yet working in the local environment; Claude Code could not connect to Anthropic. The target GTA V edition (Legacy or Enhanced) also still needs to be recorded.
 
-## Phase 1 — Define the mapping reference
+## Phase 1 — Define the first playable slice
 
-- Choose a manageable, well-defined district in Dushanbe for the first playable slice.
-- Record public reference sources and dates; separate verified observations from estimates.
-- Define coordinate conventions, block IDs, road widths, elevation assumptions, and metadata schema.
+- Choose a small Dushanbe-inspired area or landmark for the initial prototype.
+- Decide whether the first test targets single-player (for example, a Menyoo placement export) or a multiplayer server/resource format.
+- Record reference sources and dates; separate verified observations from estimates.
+- Define the relationship between the project's local planning coordinates and the chosen GTA V world location.
 - Keep prototype coordinates fictional until measured or sourced.
 
-**Acceptance:** documented source register and a stable, versioned data schema.
+**Acceptance:** chosen slice and target platform documented; source register and coordinate conventions established.
 
-## Phase 2 — Select an asset toolchain
+## Phase 2 — Verify the GTA V toolchain
 
-- Confirm the target game edition and the supported formats used by the selected community tools.
-- Verify tool licensing, project activity, safety, and compatibility from primary documentation.
-- Create a minimal blank scene and export a test object using only original assets.
-- Document setup steps without bundling proprietary game files.
+- Confirm which game installation CodeWalker reads and whether it is Legacy or Enhanced.
+- Verify camera navigation and the scene/project controls.
+- Resolve the Claude Code connection or implement and test a supported alternative backend before relying on automated placement.
+- Create a disposable scene using only existing GTA V props.
+- Export a tiny scene and inspect the output files.
 
-**Acceptance:** a reproducible toolchain guide and a tiny original test asset that can be inspected in the intended tools.
+**Acceptance:** reproducible setup notes, a small exported test scene, and a recorded target edition/platform.
 
-## Phase 3 — Central-district blockout
+## Phase 3 — First prop-based scene
 
-- Build terrain, roads, intersections, sidewalks, and building footprints from original geometry.
-- Add a repeatable naming and placement convention.
-- Review scale, collision, visibility, and navigation in the target editor.
-- Avoid claiming in-game compatibility until a legal local installation is available for testing.
+- Build a small Dushanbe-inspired roadside or plaza scene using existing game props.
+- Review scale, alignment, collision, visibility, and placement from multiple angles.
+- Export to the chosen format and test it in the stated game edition/platform.
+- Keep the exported scene separate from the fictional-coordinate block planning JSON until a valid transform is documented.
 
-**Acceptance:** reviewable blockout source files, documented coordinates, and a verification checklist.
+**Acceptance:** a small scene is visibly correct in the editor and passes a recorded in-game test.
 
-## Phase 4 — Playable vertical slice
+## Phase 4 — Original city geometry
 
-- Implement one small area with collision and basic navigation.
-- Validate performance and streaming boundaries using the target game and compatible tools.
-- Track limitations and bugs as issues.
+- Research and verify a suitable pipeline for original terrain, roads, sidewalks, and building models.
+- Create original geometry and textures, with documented scale, collision, and licensing.
+- Test one small building/road segment before increasing scope.
+- Do not claim that prop placement alone recreates Dushanbe or supplies new building interiors.
 
-**Acceptance:** a human tester confirms the slice works in the intended game version; record the test environment and results.
+**Acceptance:** one original geometry segment exports, loads, and is verified in the target edition.
 
 ## Phase 5 — Expand carefully
 
-- Add adjacent blocks, landmarks, roads, and original visual details in small pull requests.
+- Add adjacent blocks, recognizable landmarks, and original visual details in small pull requests.
 - Track provenance and licenses for all non-original reference material.
-- Run automated checks on every change and periodic in-game verification when available.
+- Run automated checks on every change and in-game verification when a runnable slice exists.
 
 **Acceptance:** each area has source data, asset provenance, review notes, and test evidence.
