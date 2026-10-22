@@ -1,31 +1,40 @@
 # Dushanbe-GTA
 
-An original map-mod project for the classic PC edition of **Grand Theft Auto: San Andreas**, inspired by Dushanbe, Tajikistan.
+An original map project inspired by Dushanbe, Tajikistan, targeting **Grand Theft Auto V on PC**.
 
-The repository begins with planning data and validation tools. It does **not** include the game or any Rockstar assets, and it does not claim to be a playable build.
+The repository contains planning data, validation tools, and a documented path toward an initial prototype. It does **not** include the game, Rockstar assets, or a playable build.
 
-## Current scope
+## Current status
 
-- Establish project rules and an incremental roadmap.
-- Define a small, clearly fictional central-district block as a data prototype.
-- Validate project JSON and run unit tests automatically through GitHub Actions.
-- Research a compatible, legally usable mapping workflow before producing game-specific assets.
+- Project foundation and offline JSON validation are in place.
+- **Local tool launch verified on 2026-10-22:** GTA V Map Agent opened and its embedded CodeWalker 3D world loaded.
+- **AI placement is not yet verified:** Claude Code could not connect to Anthropic services from the current environment, so the first prop-placement request has not been completed.
+- **In-game export/testing has not been performed.**
+- The exact target installation—GTA V Legacy or Enhanced—must be recorded before making edition-specific compatibility claims.
+
+## Initial prototype scope
+
+The first goal is a small, reviewable Dushanbe-inspired scene rather than a claim to recreate the entire city. GTA V Map Agent can arrange existing GTA V props and export placements. It does not create new terrain, custom building models, interiors, or complete road geometry; those require a separate 3D authoring and game-format workflow.
+
+The initial central-block data is an illustrative planning model only. Its coordinates use a fictional local Cartesian grid in metres. They are **not** surveyed Dushanbe coordinates or GTA V world coordinates, and cannot be loaded directly into the game as a map.
 
 ## Repository layout
 
-- `AGENTS.md` — contributor and agent rules, including asset boundaries.
+- `AGENTS.md` — contribution and agent rules, including asset and edition boundaries.
 - `docs/ROADMAP.md` — phased project plan.
-- `docs/ARIANE_TOOLING.md` — tooling research and workflow notes; verify tool compatibility before adoption.
+- `docs/ARIANE_TOOLING.md` — tool research, checks, and current setup status.
+- `docs/GTAV_MAPAGENT_WORKFLOW.md` — repeatable steps for the first small scene.
 - `map-data/blocks/center_prototype.json` — illustrative block data in local project coordinates.
 - `scripts/validate_project.py` — standard-library-only data validator.
 - `tests/test_project_data.py` — four unit tests for schema and geometry constraints.
-- `.github/workflows/validate.yml` — automated validation and test workflow.
+- `.github/workflows/validate.yml` — automated validation and tests.
 
-## Requirements
+## Requirements for project data
 
-- Python 3.10 or later (the validator uses only the Python standard library).
+- Python 3.10 or later; the validator uses only the standard library.
 - Git for version control.
-- For future asset authoring: a suitable 3D editor and version-compatible GTA San Andreas modding tools, selected after research.
+- For the first prop-placement experiment, [GTA V Map Agent](https://github.com/cngil/gtav-mapagent) and a compatible GTA V PC installation.
+- For original terrain, roads, and building models, a separately verified 3D authoring and GTA V export pipeline.
 
 ## Validate locally
 
@@ -36,8 +45,10 @@ python scripts/validate_project.py
 python -m unittest discover -s tests -v
 ```
 
-The data coordinates are fictional local coordinates in metres, not surveyed coordinates for real streets. The prototype is a planning example, not a GTA map export.
-
 ## Legal and asset policy
 
-Use only original assets or resources whose licenses permit the intended use. Do not add Rockstar game files, extracted assets, pirated copies, or assets from other mods without explicit redistribution permission. Users must obtain and install their own lawful copy of the game. No game launch or runtime validation has been performed as part of this repository setup.
+Use only original assets or resources whose licenses permit the intended use. Do not add Rockstar game files, extracted assets, pirated copies, or assets from other mods without explicit redistribution permission. Users must obtain and install their own lawful copy of the game. A loaded 3D world is not proof that an exported map works in-game.
+
+## External tool references
+
+- [GTA V Map Agent](https://github.com/cngil/gtav-mapagent) — open-source prop-placement editor using CodeWalker and Claude Code. Its bundled CodeWalker has its own licensing notices; review them before redistributing bundled components.
