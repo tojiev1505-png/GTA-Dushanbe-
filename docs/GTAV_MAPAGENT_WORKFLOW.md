@@ -1,14 +1,14 @@
-# First GTA V Map Agent experiment
+# GTA V Map Agent: optional prop dressing
 
-This guide is for an incremental prop-placement prototype. It does not create a full Dushanbe city map.
+GTA V Map Agent is now a supporting tool for the Dushanbe map project, not the main tool for creating city geometry.
 
-## 1. Verified local setup
+## Verified local setup
 
-- The editor launches and the embedded CodeWalker world loads.
+- Editor launches and the embedded CodeWalker world loads.
 - The 3D camera is working.
-- On 2026-10-22, the user confirmed that GTA V Map Agent, configured with Ollama's local API and `qwen3:4b`, successfully placed one existing GTA V streetlight.
+- The user confirmed one existing GTA V streetlight was placed successfully with the local Ollama `qwen3:4b` configuration.
 
-The local-model environment used in the PowerShell session that launched the app:
+Launch from a PowerShell session configured for the local model:
 
 ```powershell
 $env:ANTHROPIC_BASE_URL = "http://localhost:11434"
@@ -19,31 +19,23 @@ cd "$HOME\gtav-mapagent\editor"
 npm start
 ```
 
-For this local inference workflow, do not run `/login` as a fix for the Anthropic cloud timeout.
+## What to use it for
 
-## 2. Next step: build the small square
+- Add existing game props after roads and building layout are defined.
+- Place street furniture, planters, barriers, signs, and other placeable objects.
+- Check ground contact and collisions for placements.
+- Export a small prop arrangement for inspection.
 
-Open the same project in the editor and send the request below. It intentionally says four streetlights total so the existing test lamp can be kept, rather than duplicated blindly.
+## What not to expect from it
 
-> Build a small Dushanbe-inspired public square around the existing test streetlight. Keep that streetlight and place only the additional objects needed to reach four streetlights total. Add two benches facing each other and three planters around a simple central pedestrian space. Use only existing GTA V props returned by search_props, place the props in a folder named "Dushanbe Test Square", keep them on the ground, and avoid blocking roads or building entrances. Before placing an object, search for its exact model name. After placement, check every prop for collisions and ground contact; fix any problems and inspect the result from top view and at least two sides. Do not create custom models and do not export the map yet. Report the prop IDs and any validation issues.
+It does not generate custom city terrain, a complete street network, bespoke building facades or unique monuments. It also does not turn static car objects into fully functioning traffic. Use Blender + a verified GTA V asset pipeline for original geometry and separate game systems for live traffic behavior.
 
-If the agent starts asking what scene to build instead of acting, ask it to complete this explicit checklist using the map tools. Keep the existing test lamp unless it is in an unsafe position.
+## Local agent prompt guidance
 
-## 3. Inspect the result
+Qwen may print proposed tool calls instead of executing them. When that happens, ask for one concise action at a time and explicitly require the real tool to be called, then verify the resulting prop IDs/scene panel. Avoid making a long city scene depend on unverified calls.
 
-- Verify the two benches visibly face each other.
-- Count four streetlights total, including the existing one.
-- Count three planters.
-- Review the returned validation reports and any tool errors.
-- Inspect the arrangement from multiple angles.
-- Undo the last request if it causes a bad or oversized scene.
+## Project safety
 
-## 4. Export and game testing
-
-After the prop arrangement looks right, save the project and export a JSON copy for review. Then decide whether the target is GTA V Legacy or Enhanced and whether the intended use is single-player or multiplayer. Export to the relevant format only after that decision, then test it in the selected game edition/platform.
-
-Do not copy GTA V game files, extracted Rockstar assets, credentials, or third-party assets without redistribution permission into the Dushanbe-GTA repository. The illustrative coordinates from `map-data/blocks/center_prototype.json` are fictional local coordinates; they are not GTA V placement coordinates and cannot be pasted into the editor without a documented transform.
-
-## 5. Understand the limits
-
-GTA V Map Agent places existing GTA V props. It does not create new terrain, custom buildings, new interiors, or a complete replacement road network. Those parts of a Dushanbe recreation require a separate original 3D-asset pipeline and their own export and in-game tests.
+- Work in a disposable project or separate project before mass placement.
+- Do not export or install the result until target edition/platform is decided.
+- Keep game files and exported proprietary assets out of the source repository unless redistribution is explicitly allowed.
